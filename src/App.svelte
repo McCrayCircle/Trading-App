@@ -2,14 +2,14 @@
 
 	import { onMount } from 'svelte'
 
-	// import Modals from './components/layout/Modals.svelte'
+	import Modals from './components/layout/Modals.svelte'
 	import Toasts from './components/layout/Toasts.svelte'
-	// import Header from './components/layout/Header.svelte'
+	import Header from './components/layout/Header.svelte'
 
-	// import { monitorOracleResponse } from './lib/monitor'
-	// import { initWebsocket } from './lib/stream'
+	import { monitorOracleResponse } from './lib/monitor'
+	import { initWebsocket } from './lib/stream'
 	import { component } from './lib/stores'
-	// import { loadRoute, navigateTo, catchLinks, hidePopoversOnClick } from './lib/utils'
+	import { loadRoute, navigateTo, catchLinks, hidePopoversOnClick } from './lib/utils'
 
 	// localstorage clearance for v2
 	if (localStorage.getItem('productId')*1 > 0) {
@@ -18,17 +18,17 @@
 		localStorage.removeItem('cachedLeverages');
 	}
 
-	// onMount(async () => {
-	// 	loadRoute(location.hash, true);
-	// 	catchLinks((path) => navigateTo(path));
-	// 	hidePopoversOnClick();
+	onMount(async () => {
+		loadRoute(location.hash, true);
+		catchLinks((path) => navigateTo(path));
+		hidePopoversOnClick();
 
 	// 	// For back button functionality
-	// 	window.onpopstate = () => loadRoute(location.hash);
+		window.onpopstate = () => loadRoute(location.hash);
 
-	// 	initWebsocket();
-	// 	monitorOracleResponse();
-	// });
+		initWebsocket();
+		monitorOracleResponse();
+	});
 
 </script>
 
@@ -104,4 +104,7 @@
 
 </style>
 
+<Modals />
+<Toasts />
+<Header />
 <svelte:component this={$component}/>
