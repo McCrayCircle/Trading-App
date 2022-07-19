@@ -141,6 +141,7 @@ export async function switchChains() {
 		// handle other "switch" errors
 	}
 
+
 }
 
 async function handleAccountsChanged() {

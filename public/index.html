@@ -19,10 +19,11 @@
 	<script type="text/javascript">
 		(function (e, t) {
 			var n = e.amplitude || { _q: [], _iq: {} }; 
-			var r = t.createElement("script"); r.type = "text/javascript"; 
+			var r = t.createElement("script"); 
+			r.type = "text/javascript"; 
 			r.integrity = "sha384-tzcaaCH5+KXD4sGaDozev6oElQhsVfbJvdi3//c2YvbY02LrNlbpGdt3Wq4rWonS"; 
 			r.crossOrigin = "anonymous";
-			 r.async = true; 
+			r.async = true; 
 			r.src = "https://cdn.amplitude.com/libs/amplitude-8.5.0-min.gz.js"; 
 			r.onload = function () {
 				if (!e.amplitude.runQueuedFunctions) {

@@ -597,6 +597,7 @@ export async function submitOrder(isLong) {
 		amplitude.getInstance().logEvent('Order Submit', {productId, currencyLabel, margin, size, leverage, isLong, marginEth});
 
 	} catch(e) {
+		console.log(e, 'error')
 		showToast(e);
 		return e;
 	}

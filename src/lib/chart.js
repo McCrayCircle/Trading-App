@@ -98,7 +98,7 @@ export function initChart() {
 		});
 
 		async function onVisibleLogicalRangeChanged(newVisibleLogicalRange) {
-			//console.log('lvc', newVisibleLogicalRange);
+			// console.log('lvc', newVisibleLogicalRange);
 		    // returns bars info in current visible range
 		    const barsInfo = candlestickSeries.barsInLogicalRange(newVisibleLogicalRange);
 		    //console.log(barsInfo);
@@ -134,7 +134,7 @@ export function initChart() {
 // timezone corrected time in seconds
 function correctedTime(time) {
 	const timezoneOffsetMinutes = new Date().getTimezoneOffset();
-	//console.log('timezoneOffsetMinutes', timezoneOffsetMinutes);
+	// console.log('timezoneOffsetMinutes', timezoneOffsetMinutes);
 	return time-(timezoneOffsetMinutes*60)
 }
 

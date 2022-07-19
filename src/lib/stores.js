@@ -22,8 +22,6 @@ export const leverage = writable();
 export const isSubmittingLong = writable(false);
 export const isSubmittingShort = writable(false);
 
-console.log(prices, 'prices')
-
 export const margin = derived([size, leverage], ([$size, $leverage]) => {
 	if (!$size || !$leverage) return 0;
 	return ($size || 0) / $leverage;
