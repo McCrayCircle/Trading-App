@@ -17,9 +17,9 @@
 <Modal title='Invalid Network' showHeader={true} showCancel={true}>
 
 	<div class='note'>
-		Select Arbitrum as your wallet's network to trade or pool on CAP.
+		Select Polygon(mumbai) as your wallet's network to trade or pool on CAP.
 	</div>
 
-	<Button wrap={true} onClick={() => {switchChains()}} label={`Switch to Arbitrum`} />
+	<Button wrap={true} onClick={() => {switchChains()}} label={`Switch to Polygon`} />
 
 </Modal>

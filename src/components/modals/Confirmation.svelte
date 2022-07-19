@@ -56,6 +56,7 @@
 	async function calculateRows(price) {
 
 		const product = await getProduct(data.productId);
+		console.log(product, 'confirm')
 
 		let _existingPosition = existingPosition;
 

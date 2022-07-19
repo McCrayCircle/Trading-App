@@ -114,7 +114,7 @@ export async function switchChains() {
 	try {
 		await wallet.request({
 			method: 'wallet_switchEthereumChain',
-			params: [{ chainId: '0xA4B1' }],
+			params: [{ chainId: '0x13881' }],
 		});
 	} catch (switchError) {
 		// This error code indicates that the chain has not been added to MetaMask.
@@ -123,15 +123,15 @@ export async function switchChains() {
 				await wallet.request({
 					method: 'wallet_addEthereumChain',
 					params: [{
-						chainId: '0xA4B1',
-						chainName: 'Arbitrum One',
-						rpcUrls: [CHAINDATA[42161]['rpc']],
+						chainId: '0x13881',
+						chainName: 'Mumbai',
+						rpcUrls: [CHAINDATA[80001]['rpc']],
 						nativeCurrency: {
-							name: 'ETH',
-							symbol: 'ETH',
+							name: 'tMATIC',
+							symbol: 'tMATIC',
 							decimals: 18
 						},
-						blockExplorerUrls: [CHAINDATA[42161]['explorer']]
+						blockExplorerUrls: [CHAINDATA[80001]['explorer']]
 					}],
 				});
 			} catch (addError) {

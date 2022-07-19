@@ -100,5 +100,21 @@ export const CHAINDATA = {
 			cap: 1637154307000
 		},
 		cap: '0x031d35296154279DC1984dCD93E392b1f946737b'
+	},
+	80001: {
+		label: 'Mumbai',
+		router: '0x5ABFF8F8D5b13253dCAB1e427Fdb3305cA620119',
+		explorer: 'https://mumbai.polygonscan.com/',
+		rpc: 'https://rpc-mumbai.maticvigil.com', // for walletconnect
+		currencies: {
+			weth: ADDRESS_ZERO,
+			usdc: '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174'
+		},
+		poolInception: {
+			weth: 1637154307000,
+			usdc: 1637154307000,
+			cap: 1637154307000
+		},
+		cap: '0x031d35296154279DC1984dCD93E392b1f946737b'
 	}
 }

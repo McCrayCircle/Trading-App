@@ -23,7 +23,7 @@
 		catchLinks((path) => navigateTo(path));
 		hidePopoversOnClick();
 
-	// 	// For back button functionality
+	// For back button functionality
 		window.onpopstate = () => loadRoute(location.hash);
 
 		initWebsocket();

@@ -56,7 +56,7 @@
 <div class='wallet'>
 
 	{#if $address && $wrongNetwork}
-	<div class='wrong-network' on:click={() => {switchChains()}}>Switch to Arbitrum</div>
+	<div class='wrong-network' on:click={() => {switchChains()}}>Switch to Polygon(mumbai)</div>
 	{/if}
 
 	{#if $address}

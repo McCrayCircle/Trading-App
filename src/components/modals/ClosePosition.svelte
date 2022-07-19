@@ -86,6 +86,7 @@
 	async function calculateRows() {
 
 		const product = await getProduct(data.productId);
+		console.log(product, 'here')
 
 		rows = [
 			{

@@ -138,7 +138,7 @@ export function initWebsocket() {
 	if (ws) {
 		try {
 			ws.close(3335,"");
-		} catch(e) {};
+		} catch(e) { console.log('Error', e) };
 		ws = null;
 		clearTimeout(h);
 	}
@@ -192,7 +192,7 @@ export function initWebsocket() {
 			}
 
 		} catch(e) {
-			console.error(e);
+			console.error('Error', e);
 		}
 
 	}

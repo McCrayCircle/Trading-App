@@ -105,7 +105,7 @@ export function getCachedLeverage(_productId) {
 		try {
 			cl = JSON.parse(cl);
 			return cl[_productId] * 1;
-		} catch(e) {}
+		} catch(e) { console.log("Error", e) }
 	} else {
 		return null;
 	}

@@ -11,8 +11,6 @@ let ack_network = false;
 
 export async function getContract(contractName, withSigner, _currencyLabel) {
 
-	// console.log('gc', contractName, withSigner, _currencyLabel);
-
 	const _signer = get(Stores.signer);
 
 	if (_currencyLabel) {
@@ -21,8 +19,6 @@ export async function getContract(contractName, withSigner, _currencyLabel) {
 
 	const _chainId = get(Stores.chainId);
 	const _provider = get(Stores.provider);
-
-	// console.log('_chainId', _chainId, _provider, ack_network, CHAINDATA[_chainId]);
 
 	if (!_chainId || !_provider) return;
 
@@ -37,6 +33,7 @@ export async function getContract(contractName, withSigner, _currencyLabel) {
 	
 	// hideModal();
 	Stores.wrongNetwork.set(false);
+	console.log(contracts, 'contracts')
 
 	if (contracts[contractName]) {
 		if (withSigner) {

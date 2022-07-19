@@ -49,8 +49,8 @@ export function initChart() {
 		window.onresize = () => {
 			chartDivWidth = tradingRowElem.offsetWidth - sidebarWidth;
 			chartDivHeight = chartElem.offsetHeight;
-			console.log('px', window.devicePixelRatio, window.screen.availWidth, document.documentElement.clientWidth);
-			console.log('chartDivWidth', chartDivWidth, chartDivHeight);
+			// console.log('px', window.devicePixelRatio, window.screen.availWidth, document.documentElement.clientWidth);
+			// console.log('chartDivWidth', chartDivWidth, chartDivHeight);
 			chart.resize(chartDivWidth, chartDivHeight);
 		};
 

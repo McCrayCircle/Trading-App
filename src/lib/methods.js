@@ -13,11 +13,14 @@ let productCache = {};
 
 export async function getProduct(productId) {
 	
-	if (productCache[productId]) return productCache[productId];
+	if (productCache[productId]) {
+		console.log(productCache[productId], 'cache')
+		return productCache[productId];
+	}
 	
 	const contract = await getContract('trading');
 	if (!contract) return {};
-
+	
 	productCache[productId] = formatProduct(productId, await contract.getProduct(toBytes32(productId)));
 	
 	return productCache[productId];
@@ -118,6 +121,7 @@ export async function getAllowance(currencyLabel, spenderName) {
 }
 
 export async function getOrders(keys) {
+	console.log(keys, 'keys')
 	
 	const contract = await getContract('trading');
 	if (!contract) return {};
@@ -283,10 +287,10 @@ export async function getPoolInfo(currencyLabel, reloading) {
 			utilizationMultiplier
 		};
 
-		// console.log('info', info);
+		console.log('info', info);
 
 	} catch(e) {
-		// console.log('error', e);
+		console.log('error', e);
 	}
 
 	Stores.pools.update((x) => {
@@ -347,7 +351,9 @@ export async function getOldPoolInfo(currencyLabel) {
 			utilizationMultiplier
 		};
 
-	} catch(e) {}
+	} catch(e) {
+		console.log(e, 'errror')
+	}
 
 	Stores.oldPools.update((x) => {
 		x[currencyLabel] = info;
@@ -548,7 +554,6 @@ export async function getClaimableReward(currencyLabel, forCAP, isOld) {
 export async function submitOrder(isLong) {
 
 	const contract = await getContract('trading', true);
-	console.log('contract', contract);
 	if (!contract) throw 'No contract available.';
 
 	const currencyLabel = get(Stores.currencyLabel);

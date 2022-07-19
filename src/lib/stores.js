@@ -35,7 +35,7 @@ export const marginPlusFee = derived([size, leverage, product], ([$size, $levera
 
 export const slippage = derived([size, productId, currencyLabel], ([$size, $productId, $currencyLabel]) => {
 	
-	// console.log('p', $size, $productId, $prices, $currencyLabel);
+	console.log('p', $size, $productId, $prices, $currencyLabel);
 
 	if (!$size || !$productId || !$prices[$productId] || !$currencyLabel) return 0;
 	
