@@ -28,12 +28,10 @@ export async function monitorOracleResponse() {
 	let requests = 0;
 	let c = setInterval(async () => {
 		const _orders = get(orders);
-		// console.log('got orders', _orders);
-		// console.log('requests', requests);
 		if (_orders.length) {
 			await getUserOrders();
 			await getUserPositions();
-			// console.log('M: refreshed orders and positions');
+			console.log('M: refreshed orders and positions');
 
 			requests++;
 			if (requests > 100) {

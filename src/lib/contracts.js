@@ -33,7 +33,6 @@ export async function getContract(contractName, withSigner, _currencyLabel) {
 	
 	// hideModal();
 	Stores.wrongNetwork.set(false);
-	console.log(contracts, 'contracts')
 
 	if (contracts[contractName]) {
 		if (withSigner) {

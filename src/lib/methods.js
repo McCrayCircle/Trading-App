@@ -14,7 +14,6 @@ let productCache = {};
 export async function getProduct(productId) {
 	
 	if (productCache[productId]) {
-		console.log(productCache[productId], 'cache')
 		return productCache[productId];
 	}
 	
@@ -121,7 +120,6 @@ export async function getAllowance(currencyLabel, spenderName) {
 }
 
 export async function getOrders(keys) {
-	console.log(keys, 'keys')
 	
 	const contract = await getContract('trading');
 	if (!contract) return {};
