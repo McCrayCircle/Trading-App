@@ -70,8 +70,15 @@ module.exports = {
     //   skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     // },
     mumbai: {
-      provider: () => new HDWalletProvider(mnemonic, `https://polygon-mumbai.g.alchemy.com/v2/c2ykx4FpFOf7XmucMdCOPQ3YvGe2ogbk`),
+      provider: () => new HDWalletProvider(
+        mnemonic, 
+        'https://polygon-mumbai.g.alchemy.com/v2/c2ykx4FpFOf7XmucMdCOPQ3YvGe2ogbk',
+        0,
+        1
+      ),
       network_id: 80001,       // Ropsten's id
+      confirmations: 2,    // # of confirmations to wait between deployments. (default: 0)
+      timeoutBlocks: 2000000,  // # of blocks before a deployment times out  (minimum/default: 50)
       skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
     },
     //
