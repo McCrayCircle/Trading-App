@@ -19,10 +19,11 @@ const TradingAbi = require('./abis/trading.json')
 const OracleAbi = require('./abis/oracle.json')
 const ETH_USD = require('./abis/ETH-USD.json')
 
-let OracleContract = new ethers.Contract(process.env.ORACLE_CONTRACT, OracleAbi, darkOracle)
-let TradingContract = new ethers.Contract(process.env.TRADING_CONTRACT, TradingAbi);
+const OracleContract = new ethers.Contract(process.env.ORACLE_CONTRACT, OracleAbi, darkOracle)
+const TradingContract = new ethers.Contract(process.env.TRADING_CONTRACT, TradingAbi);
 const ETH_USDContract = new mainnetWeb3.eth.Contract(ETH_USD, process.env.ETH_USD_CONTRACT)
 const TradingcontractWeb3 = new web3.eth.Contract(TradingAbi, process.env.TRADING_CONTRACT)
+const OracleContract1 = new web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
 
 const app = express();
 app.use(cors());
@@ -35,6 +36,11 @@ db.once('open', () => {
 
 let confirmedBlockNumber;
 let id;
+
+const gas = {
+  gasPrice: ethers.utils.parseUnits('100', 'gwei'),
+  gasLimit: 20000000
+}
 
 const parseUnits = (number, units) => {
   if (typeof(number) == 'number') {
@@ -69,28 +75,41 @@ const cancelOrder = async() => {
 }
 
 app.listen(process.env.PORT || 5000, async function () {
-  const settleOrders = async(users, productIds, currencies, isLongs, newBlockNumber) => {
-    let { answer } = await ETH_USDContract.methods.latestRoundData().call();
-    console.log(users, productIds, currencies, isLongs, answer, newBlockNumber)
-    // let res = await OracleContract.settleOrders(
-    //   users, 
-    //   productIds, 
-    //   currencies, 
-    //   isLongs,
-    //   [answer]
-    // )
-    // console.log('tx data', res)
-    // let tx = await res.wait();
-    // console.log('tx', tx)
-    // if(tx) {
-    //   const updateData = {
-    //     blockID: newBlockNumber,
-    //   }
-    //   Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
-    //     if(err) console.log("error", err)
-    //     else console.log("successed!!!")
-    //   })
-    // }
+  const settleOrders = async(users, productIds, currencies, isLongs, answers, nonce, newBlockNumber) => {
+    console.log('settle order')
+    
+    console.log(users, productIds, currencies, isLongs, answers, newBlockNumber)
+    let params = OracleContract1.methods.settleOrders(
+      users, 
+      productIds, 
+      currencies, 
+      isLongs,
+      answers
+    )
+    console.log('encoded data', params.encodeABI())
+    try {
+      let res = await darkOracle.sendTransaction({
+        nonce: nonce,
+        to: '0xD7FDDeA9602C97618767650D832183158F93C1Cc',
+        ...gas,
+        data: params.encodeABI(),
+  
+      });
+      console.log('tx', res, 'waiting confirmed')
+      let confirmData = await res.wait();
+      if(confirmData) {
+        console.log('success', confirmData)
+        const updateData = {
+          blockNumber: newBlockNumber,
+        }
+        Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
+          if(err) console.log("error", err)
+          else console.log("successed!!!")
+        })
+      } 
+    } catch(e) {
+      console.log('error', e)
+    }
   }
 
   const getLatestBlockNumber = async () => {
@@ -100,10 +119,8 @@ app.listen(process.env.PORT || 5000, async function () {
         if (err) console.log("error", err)
         else {
           Object.values(result).map(function(block) {
-            console.log('block', block)
             confirmedBlockNumber =  block.blockNumber
             id = block._id
-            console.log(id, typeof(id), 'id')
           })
         }
       })
@@ -113,8 +130,6 @@ app.listen(process.env.PORT || 5000, async function () {
   }
 
   confirmedBlockNumber = await getLatestBlockNumber();
-  
-  // confirmedBlockNumber = 27313639;
   
   for(; ;) {
     let latestBlockNumber = await web3.eth.getBlockNumber();
@@ -131,17 +146,27 @@ app.listen(process.env.PORT || 5000, async function () {
             toBlock: latestBlockNumber
           }, function(error, events) { return; })
           .then(async(events) => {
+           
             console.log('events', events.length)
-            let users = [], productIds = [], currencies = [], isLongs = [];
-            for(var i = 0; i < events.length; i ++) {
-              const { user, productId, currency, isLong } = events[i].returnValues;
-              users.push(user)
-              productIds.push(productId)
-              currencies.push(currency)
-              isLongs.push(isLong)
+            if(events.length > 0) {
+              let nonce = await web3.eth.getTransactionCount('0xfc69685086C75Dbbb3834a524F9D36ECB8bB1745')
+              for(var i = 0; i < events.length; i ++) {
+                let users = [], productIds = [], currencies = [], isLongs = [], answers = [];
+                const { user, productId, currency, isLong } = events[i].returnValues;
+                let { answer } = await ETH_USDContract.methods.latestRoundData().call();
+
+                users.push(user)
+                productIds.push(productId)
+                currencies.push(currency)
+                isLongs.push(isLong)
+                answers.push(answer)
+
+                nonce ++;
+                settleOrders(users, productIds, currencies, isLongs, answers, nonce, latestBlockNumber);
+              }
             }
-            settleOrders(users, productIds, currencies, isLongs, latestBlockNumber);
           })
+          resolve()
         } catch(e) {
           console.log('error', e)
           reject(e)
@@ -152,7 +177,7 @@ app.listen(process.env.PORT || 5000, async function () {
     }
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 10 * 1000)
+      setTimeout(resolve, 1000 * 1000)
     })
   }
   
