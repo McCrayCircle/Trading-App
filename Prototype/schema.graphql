@@ -1,0 +1,123 @@
+type Data @entity(immutable: true) {
+  
+  id: ID! # currency string
+
+  cumulativeFees: BigInt
+  cumulativePnl: BigInt
+  cumulativeVolume: BigInt
+  cumulativeMargin: BigInt
+
+  openInterest: BigInt
+  openInterestLong: BigInt
+  openInterestShort: BigInt
+
+  positionCount: BigInt
+  tradeCount: BigInt
+
+}
+
+type DayData @entity(immutable: true) {
+
+  id: ID! # day id = currency - event.block.timestamp / 86400 see https://github.com/Uniswap/uniswap-v3-subgraph/blob/1593a62059589bb1266d19bf18c5fa08fb68fe63/src/utils/intervalUpdates.ts#L43
+
+  date: BigInt! # dayStartTimestamp = dayID * 86400
+
+  cumulativeFees: BigInt
+  cumulativePnl: BigInt
+  cumulativeVolume: BigInt
+  cumulativeMargin: BigInt
+
+  openInterest: BigInt
+  openInterestLong: BigInt
+  openInterestShort: BigInt
+
+  positionCount: BigInt
+  tradeCount: BigInt
+
+}
+
+type Product @entity(immutable: true) {
+  id: ID! # product id - currency
+
+  cumulativeFees: BigInt
+  cumulativePnl: BigInt
+  cumulativeVolume: BigInt
+  cumulativeMargin: BigInt
+
+  positionCount: BigInt
+  tradeCount: BigInt
+
+  openInterest: BigInt
+  openInterestLong: BigInt
+  openInterestShort: BigInt
+
+}
+
+type Position @entity(immutable: true) { # open position
+
+  id: ID! # position key
+
+  productId: Bytes!
+  leverage: BigInt!
+  price: BigInt!
+  margin: BigInt!
+  fee: BigInt!
+
+  size: BigInt!
+  liquidationPrice: BigInt
+
+  user: Bytes!
+  currency: Bytes!
+  
+  isLong: Boolean!
+
+  createdAtTimestamp: BigInt!
+  createdAtBlockNumber: BigInt!
+
+  updatedAtTimestamp: BigInt
+  updatedAtBlockNumber: BigInt
+
+}
+
+type Trade @entity(immutable: true) { # closed position
+
+  id: ID! # unique: vault.tradeCount.toString()
+
+  txHash: String! # event.transaction.hash.toHexString()
+
+  positionKey: String!
+
+  user: Bytes!
+  currency: Bytes!
+
+  productId: Bytes!
+  margin: BigInt!
+  leverage: BigInt!
+
+  size: BigInt
+  
+  entryPrice: BigInt!
+  closePrice: BigInt!
+
+  isLong: Boolean!
+  
+  fee: BigInt!
+  pnl: BigInt
+
+  wasLiquidated: Boolean!
+  isFullClose: Boolean!
+
+  duration: BigInt!
+  
+  timestamp: BigInt!
+  blockNumber: BigInt!
+
+}
+
+type Pool @entity(immutable: true) {
+  
+  id: ID! # 1
+
+  cumulativeFees: BigInt
+
+}

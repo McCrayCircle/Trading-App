@@ -1,0 +1,26 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Trading
+    network: mumbai
+    source:
+      address: "0x2ce9bf70F0CBAF8203d9828eC78c6bDf1A5BA788"
+      abi: Trading
+      startBlock: 27277000
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.5
+      language: wasm/assemblyscript
+      entities:
+        - Trading
+      abis:
+        - name: Trading
+          file: ./abis/Trading.json
+      eventHandlers:
+        - event: PositionUpdated(indexed bytes32,indexed address,indexed bytes32,address,bool,uint256,uint256,uint256,uint256)
+          handler: handlePositionUpdated
+        - event: ClosePosition(indexed bytes32,indexed address,indexed bytes32,address,bool,uint256,uint256,uint256,uint256,int256,bool)
+          handler: handleClosePosition
+      file: ./src/trading.ts
