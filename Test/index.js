@@ -9,10 +9,10 @@ let _provider = new ethers.providers.JsonRpcProvider(process.env.MUMBAI_RPC);
 var web3 = new Web3(process.env.MUMBAI_RPC);
 var mainnetWeb3 = new Web3(process.env.MAINNET_RPC)
 
-const owner = new ethers.Wallet(process.env.OWNER);
 const darkOracleSigner = new ethers.Wallet(process.env.DARKORACLE);
-const account = owner.connect(_provider);
+const account = new ethers.Wallet(process.env.OWNER, _provider);
 const darkOracle = darkOracleSigner.connect(_provider);
+const account2 = new ethers.Wallet(process.env.ACCOUNT2, _provider)
 
 const {Block} = require('./db/Block.model')
 const TradingAbi = require('./abis/trading.json')
@@ -20,7 +20,7 @@ const OracleAbi = require('./abis/oracle.json')
 const ETH_USD = require('./abis/ETH-USD.json')
 
 const OracleContract = new ethers.Contract(process.env.ORACLE_CONTRACT, OracleAbi, darkOracle)
-const TradingContract = new ethers.Contract(process.env.TRADING_CONTRACT, TradingAbi);
+const TradingContract = new ethers.Contract(process.env.TRADING_CONTRACT, TradingAbi, account);
 const ETH_USDContract = new mainnetWeb3.eth.Contract(ETH_USD, process.env.ETH_USD_CONTRACT)
 const TradingcontractWeb3 = new web3.eth.Contract(TradingAbi, process.env.TRADING_CONTRACT)
 const OracleContract1 = new web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
@@ -68,47 +68,53 @@ const submitOrder = async() => {
 const cancelOrder = async() => {
   let res = await TradingContract.cancelOrder(
     toBytes32('ETH-USD'),
-    '0x4F18aCA9C35bA6169f8e43179Ab56c0710216eA0',
+    '0x976f4671d3Bf00eA9FfBAB55174411E9568413dA',
     true
   )
   console.log('res', res)
+  let result = await res.wait();
+  console.log('result', result)
 }
 
 app.listen(process.env.PORT || 5000, async function () {
   const settleOrders = async(users, productIds, currencies, isLongs, answers, nonce, newBlockNumber) => {
     console.log('settle order')
-    
-    console.log(users, productIds, currencies, isLongs, answers, newBlockNumber)
-    let params = OracleContract1.methods.settleOrders(
+    let data = OracleContract1.methods.settleOrders(
       users, 
       productIds, 
       currencies, 
       isLongs,
       answers
     )
-    console.log('encoded data', params.encodeABI())
+    let tx = {
+      nonce: nonce,
+      to: '0xD7FDDeA9602C97618767650D832183158F93C1Cc',
+      ...gas,
+      data: data.encodeABI(),
+      chainId: 80001
+    }
     try {
-      let res = await darkOracle.sendTransaction({
-        nonce: nonce,
-        to: '0xD7FDDeA9602C97618767650D832183158F93C1Cc',
-        ...gas,
-        data: params.encodeABI(),
-  
-      });
-      console.log('tx', res, 'waiting confirmed')
-      let confirmData = await res.wait();
-      if(confirmData) {
-        console.log('success', confirmData)
-        const updateData = {
-          blockNumber: newBlockNumber,
+      let res = await darkOracleSigner.signTransaction(tx)
+      // console.log('res', res)
+      if(res) {
+        let result = await _provider.sendTransaction(res)
+        if(result) {
+          // console.log('result', result)
+          let confirmedData = await result.wait();
+          if(confirmedData) {
+            console.log('confirmed data', confirmedData)
+            const updateData = {
+              blockNumber: newBlockNumber,
+            }
+            Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
+              if(err) console.log("error", err)
+              else console.log("successed!!!")
+            })
+          }
         }
-        Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
-          if(err) console.log("error", err)
-          else console.log("successed!!!")
-        })
-      } 
+      }
     } catch(e) {
-      console.log('error', e)
+      console.log('error-----', e)
     }
   }
 
@@ -161,8 +167,8 @@ app.listen(process.env.PORT || 5000, async function () {
                 isLongs.push(isLong)
                 answers.push(answer)
 
+                await settleOrders(users, productIds, currencies, isLongs, answers, nonce, latestBlockNumber);
                 nonce ++;
-                settleOrders(users, productIds, currencies, isLongs, answers, nonce, latestBlockNumber);
               }
             }
           })
