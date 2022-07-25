@@ -135,9 +135,9 @@ app.listen(process.env.PORT || 5000, async function () {
     }
   }
 
-  confirmedBlockNumber = await getLatestBlockNumber();
   
   for(; ;) {
+    confirmedBlockNumber = await getLatestBlockNumber();
     let latestBlockNumber = await web3.eth.getBlockNumber();
     console.log('latest block number', latestBlockNumber, confirmedBlockNumber, id)
     try{
@@ -183,7 +183,7 @@ app.listen(process.env.PORT || 5000, async function () {
     }
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 1000 * 1000)
+      setTimeout(resolve, 100 * 1000)
     })
   }
   
