@@ -77,15 +77,16 @@ const cancelOrder = async() => {
 }
 
 app.listen(process.env.PORT || 5000, async function () {
-  const settleOrders = async(users, productIds, currencies, isLongs, answers, nonce, newBlockNumber) => {
+  const settleOrders = async(user, productId, currency, isLong, isClose, answer, nonce, newBlockNumber) => {
     console.log('settle order')
     let data = OracleContract1.methods.settleOrders(
-      users, 
-      productIds, 
-      currencies, 
-      isLongs,
-      answers
-    )
+        [user], 
+        [productId], 
+        [currency], 
+        [isLong],
+        [answer]
+      )
+    
     let tx = {
       nonce: nonce,
       to: '0xD7FDDeA9602C97618767650D832183158F93C1Cc',
@@ -102,14 +103,7 @@ app.listen(process.env.PORT || 5000, async function () {
           // console.log('result', result)
           let confirmedData = await result.wait();
           if(confirmedData) {
-            console.log('confirmed data', confirmedData)
-            const updateData = {
-              blockNumber: newBlockNumber,
-            }
-            Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
-              if(err) console.log("error", err)
-              else console.log("successed!!!")
-            })
+            console.log('confirmed hash', confirmedData.transactionHash)
           }
         }
       }
@@ -139,7 +133,7 @@ app.listen(process.env.PORT || 5000, async function () {
   for(; ;) {
     confirmedBlockNumber = await getLatestBlockNumber();
     let latestBlockNumber = await web3.eth.getBlockNumber();
-    console.log('latest block number', latestBlockNumber, confirmedBlockNumber, id)
+    console.log('block number', latestBlockNumber, confirmedBlockNumber)
     try{
       await new Promise(async (resolve, reject) => {
         if(latestBlockNumber <= confirmedBlockNumber + 1) {
@@ -152,24 +146,24 @@ app.listen(process.env.PORT || 5000, async function () {
             toBlock: latestBlockNumber
           }, function(error, events) { return; })
           .then(async(events) => {
-           
-            console.log('events', events.length)
+            console.log('current time', Date.now(), ', events length', events.length)
             if(events.length > 0) {
               let nonce = await web3.eth.getTransactionCount('0xfc69685086C75Dbbb3834a524F9D36ECB8bB1745')
               for(var i = 0; i < events.length; i ++) {
-                let users = [], productIds = [], currencies = [], isLongs = [], answers = [];
-                const { user, productId, currency, isLong } = events[i].returnValues;
+                console.log('tx', events[i].transactionHash)
+                const { user, productId, currency, isLong, isClose } = events[i].returnValues;
                 let { answer } = await ETH_USDContract.methods.latestRoundData().call();
 
-                users.push(user)
-                productIds.push(productId)
-                currencies.push(currency)
-                isLongs.push(isLong)
-                answers.push(answer)
-
-                await settleOrders(users, productIds, currencies, isLongs, answers, nonce, latestBlockNumber);
+                await settleOrders(user, productId, currency, isLong, isClose, answer, nonce, latestBlockNumber);
                 nonce ++;
               }
+              const updateData = {
+                blockNumber: latestBlockNumber,
+              }
+              Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
+                if(err) console.log("error", err)
+                else console.log("Block number updated!!!")
+              })
             }
           })
           resolve()
@@ -183,7 +177,7 @@ app.listen(process.env.PORT || 5000, async function () {
     }
 
     await new Promise((resolve) => {
-      setTimeout(resolve, 100 * 1000)
+      setTimeout(resolve, 40 * 1000)
     })
   }
   
