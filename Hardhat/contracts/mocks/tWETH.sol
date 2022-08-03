@@ -3,7 +3,7 @@ pragma solidity ^0.8.2;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract AlphaX is ERC20 {
+contract tWETH is ERC20 {
 
     uint8 _decimals;
 
