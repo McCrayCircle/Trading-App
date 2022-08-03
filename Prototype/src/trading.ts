@@ -1,12 +1,9 @@
-import { BigInt, store, log, ethereum } from "@graphprotocol/graph-ts"
+import { BigInt, store, ethereum } from "@graphprotocol/graph-ts"
 import {
-  Trading,
   PositionUpdated,
   ClosePosition
 } from "../generated/Trading/Trading"
 import { Data, DayData, Product, Position, Trade } from "../generated/schema"
-
-export const ADDRESS_ZERO = '0x0000000000000000000000000000000000000000'
 
 export const ZERO_BI = BigInt.fromI32(0)
 export const ONE_BI = BigInt.fromI32(1)
