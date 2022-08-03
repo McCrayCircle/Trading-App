@@ -761,7 +761,10 @@ contract Trading {
 				if (pnl < 0) {
 					{
 						uint256 positivePnl = uint256(-1 * pnl);
-						_transferOut(currency, pool, positivePnl);
+            uint256 positivePnlforPool = positivePnl * 75 / 100;
+            uint256 positivePnlforTreasury = positivePnl * 25 / 100;
+						_transferOut(currency, pool, positivePnlforPool);
+						_transferOut(currency, treasury, positivePnlforTreasury);
 						if (positivePnl < margin) {
 							_transferOut(currency, user, margin - positivePnl);
 						}
@@ -975,8 +978,8 @@ contract Trading {
 	// Internal methods
 
 	function _getPositionKey(address user, bytes32 productId, address currency, bool isLong) internal pure returns (bytes32) {
-    return keccak256(abi.encodePacked(user, productId, currency, isLong));
-  }
+        return keccak256(abi.encodePacked(user, productId, currency, isLong));
+    }
 
 	function _updateOpenInterest(address currency, uint256 amount, bool isDecrease) internal {
 		address pool = IRouter(router).getPool(currency);

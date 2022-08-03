@@ -435,23 +435,24 @@ contract Pool {
 	address public owner;
 	address public router;
 	address public trading;
+  address public treasury;
 
 	uint256 public withdrawFee = 30; // 0.3%
 
-    address public currency;
-    address public rewards; // contract
+  address public currency;
+  address public rewards; // contract
 
-    uint256 public utilizationMultiplier = 100; // in bps
+  uint256 public utilizationMultiplier = 100; // in bps
 
-    uint256 public maxCap = 1000000 ether;
+  uint256 public maxCap = 1000000 ether;
 
-    mapping(address => uint256) private balances; // account => amount staked
-    uint256 public totalSupply;
+  mapping(address => uint256) private balances; // account => amount staked
+  uint256 public totalSupply;
 
-    mapping(address => uint256) lastDeposited;
-    uint256 public minDepositTime = 1 hours;
+  mapping(address => uint256) lastDeposited;
+  uint256 public minDepositTime = 1 hours;
 
-    uint256 public openInterest;
+  uint256 public openInterest;
 
 	uint256 public constant UNIT = 10**18;
 
@@ -483,6 +484,7 @@ contract Pool {
 	function setRouter(address _router) external onlyOwner {
 		router = _router;
 		trading = IRouter(router).trading();
+    treasury = IRouter(router).treasury();
 		rewards = IRouter(router).getPoolRewards(currency);
 	}
 
@@ -580,7 +582,10 @@ contract Pool {
 
 		// Send fee to this pool's rewards contract
 		uint256 feeAmount = currencyAmount - currencyAmountAfterFee;
-		_transferOut(rewards, feeAmount);
+    uint256 feeAmountforTreasury = feeAmount * 25 / 100;
+    uint256 feeAmountforReward = feeAmount * 75 / 100;
+		_transferOut(rewards, feeAmountforReward);
+		_transferOut(treasury, feeAmountforTreasury);
 		IRewards(rewards).notifyRewardReceived(feeAmount);
 
 		emit Withdraw(
