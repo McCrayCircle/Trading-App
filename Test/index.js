@@ -148,6 +148,13 @@ app.listen(process.env.PORT || 5000, async function () {
           .then(async(events) => {
             console.log('current time', Date.now(), ', events length', events.length)
             if(events.length > 0) {
+              const updateData = {
+                blockNumber: latestBlockNumber,
+              }
+              Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
+                if(err) console.log("error", err)
+                else console.log("Block number updated!!!")
+              })
               let nonce = await web3.eth.getTransactionCount('0xfc69685086C75Dbbb3834a524F9D36ECB8bB1745')
               for(var i = 0; i < events.length; i ++) {
                 console.log('tx', events[i].transactionHash)
@@ -157,13 +164,6 @@ app.listen(process.env.PORT || 5000, async function () {
                 await settleOrders(user, productId, currency, isLong, isClose, answer, nonce, latestBlockNumber);
                 nonce ++;
               }
-              const updateData = {
-                blockNumber: latestBlockNumber,
-              }
-              Block.findByIdAndUpdate(id, updateData, {new: true}, function(err, res) {
-                if(err) console.log("error", err)
-                else console.log("Block number updated!!!")
-              })
             }
           })
           resolve()
