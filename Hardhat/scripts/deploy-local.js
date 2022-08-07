@@ -212,7 +212,7 @@ async function main() {
       parseUnits(""+p.maxLeverage),
       parseInt(p.liquidationThreshold * 100),
       parseInt(p.fee * 10000),
-      parseInt(p.interest * 100),
+      parseInt(p.interest * 10000000000),
     ]);
     console.log('Added product ' + p.id);
   }
