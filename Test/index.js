@@ -131,10 +131,12 @@ app.listen(process.env.PORT || 5000, async function () {
     }
   }
 
-  for (; ;) {
+  
+  for(; ;) {
     confirmedBlockNumber = await getLatestBlockNumber();
     let latestBlockNumber = await web3.eth.getBlockNumber();
-    try {
+    console.log('block number', latestBlockNumber, confirmedBlockNumber)
+    try{
       await new Promise(async (resolve, reject) => {
         if (latestBlockNumber <= confirmedBlockNumber + 1) {
           console.log('here', latestBlockNumber, confirmedBlockNumber)
