@@ -8,109 +8,112 @@ import "./interfaces/IRouter.sol";
 import "./interfaces/IRewards.sol";
 
 contract Pool {
-
-	using SafeERC20 for IERC20; 
+    using SafeERC20 for IERC20;
     using Address for address payable;
 
     // Contracts
-	address public owner;
-	address public router;
-	address public trading;
-  address public treasury;
+    address public owner;
+    address public router;
+    address public trading;
+    address public treasury;
 
-	uint256 public withdrawFee = 30; // 0.3%
+    uint256 public withdrawFee = 30; // 0.3%
 
-  address public currency;
-  address public rewards; // contract
+    address public currency;
+    address public rewards; // contract
 
-  uint256 public utilizationMultiplier = 100; // in bps
+    uint256 public utilizationMultiplier = 100; // in bps
 
-  uint256 public maxCap = 1000000 ether;
+    uint256 public maxCap = 1000000 ether;
 
-  mapping(address => uint256) private balances; // account => amount staked
-  uint256 public totalSupply;
+    mapping(address => uint256) private balances; // account => amount staked
+    uint256 public totalSupply;
 
-  mapping(address => uint256) lastDeposited;
-  uint256 public minDepositTime = 1 hours;
+    mapping(address => uint256) lastDeposited;
+    uint256 public minDepositTime = 1 hours;
 
-  uint256 public openInterest;
+    uint256 public openInterest;
 
-	uint256 public constant UNIT = 10**18;
+    uint256 public constant UNIT = 10**18;
 
     // Events
     event Deposit(
-    	address indexed user, 
-    	address indexed currency,
-    	uint256 amount, 
-    	uint256 clpAmount
+        address indexed user,
+        address indexed currency,
+        uint256 amount,
+        uint256 clpAmount
     );
     event Withdraw(
-    	address indexed user, 
-    	address indexed currency,
-    	uint256 amount, 
-    	uint256 clpAmount
+        address indexed user,
+        address indexed currency,
+        uint256 amount,
+        uint256 clpAmount
     );
 
-	constructor(address _currency) {
-		owner = msg.sender;
-		currency = _currency;
-	}
+    constructor(address _currency) {
+        owner = msg.sender;
+        currency = _currency;
+    }
 
-	// Governance methods
+    // Governance methods
 
-	function setOwner(address newOwner) external onlyOwner {
-		owner = newOwner;
-	}
+    function setOwner(address newOwner) external onlyOwner {
+        owner = newOwner;
+    }
 
-	function setRouter(address _router) external onlyOwner {
-		router = _router;
-		trading = IRouter(router).trading();
-    treasury = IRouter(router).treasury();
-		rewards = IRouter(router).getPoolRewards(currency);
-	}
+    function setRouter(address _router) external onlyOwner {
+        router = _router;
+        trading = IRouter(router).trading();
+        treasury = IRouter(router).treasury();
+        rewards = IRouter(router).getPoolRewards(currency);
+    }
 
-	function setParams(
-		uint256 _minDepositTime,
-		uint256 _utilizationMultiplier,
-		uint256 _maxCap,
-		uint256 _withdrawFee
-	) external onlyOwner {
-		minDepositTime = _minDepositTime;
-		utilizationMultiplier = _utilizationMultiplier;
-		maxCap = _maxCap;
-		withdrawFee = _withdrawFee;
-	}
+    function setParams(
+        uint256 _minDepositTime,
+        uint256 _utilizationMultiplier,
+        uint256 _maxCap,
+        uint256 _withdrawFee
+    ) external onlyOwner {
+        minDepositTime = _minDepositTime;
+        utilizationMultiplier = _utilizationMultiplier;
+        maxCap = _maxCap;
+        withdrawFee = _withdrawFee;
+    }
 
-	// Open interest
-	function updateOpenInterest(uint256 amount, bool isDecrease) external onlyTrading {
-		if (isDecrease) {
-			if (openInterest <= amount) {
-				openInterest = 0;
-			} else {
-				openInterest -= amount;
-			}
-		} else {
-			openInterest += amount;
-		}
-	}
+    // Open interest
+    function updateOpenInterest(uint256 amount, bool isDecrease)
+        external
+        onlyTrading
+    {
+        if (isDecrease) {
+            if (openInterest <= amount) {
+                openInterest = 0;
+            } else {
+                openInterest -= amount;
+            }
+        } else {
+            openInterest += amount;
+        }
+    }
 
-	// Methods
+    // Methods
 
-	function deposit(uint256 amount) external payable {
+    function deposit(uint256 amount) external payable {
+        uint256 lastBalance = _getCurrentBalance();
 
-		uint256 lastBalance = _getCurrentBalance();
+        if (currency == address(0)) {
+            amount = msg.value;
+            lastBalance -= amount;
+        } else {
+            _transferIn(amount);
+        }
 
-		if (currency == address(0)) {
-			amount = msg.value;
-			lastBalance -= amount;
-		} else {
-			_transferIn(amount);
-		}
+        require(amount > 0, "!amount");
+        require(amount + lastBalance <= maxCap, "!max-cap");
 
-		require(amount > 0, "!amount");
-		require(amount + lastBalance <= maxCap, "!max-cap");
-
-        uint256 clpAmountToMint = lastBalance == 0 || totalSupply == 0 ? amount : amount * totalSupply / lastBalance;
+        uint256 clpAmountToMint = lastBalance == 0 || totalSupply == 0
+            ? amount
+            : (amount * totalSupply) / lastBalance;
 
         lastDeposited[msg.sender] = block.timestamp;
 
@@ -119,137 +122,139 @@ contract Pool {
         totalSupply += clpAmountToMint;
         balances[msg.sender] += clpAmountToMint;
 
-        emit Deposit(
-        	msg.sender,
-        	currency,
-        	amount,
-        	clpAmountToMint
+        emit Deposit(msg.sender, currency, amount, clpAmountToMint);
+    }
+
+    function withdraw(uint256 currencyAmount) external {
+        require(currencyAmount > 0, "!amount");
+        require(
+            block.timestamp > lastDeposited[msg.sender] + minDepositTime,
+            "!cooldown"
         );
 
-	}
+        IRewards(rewards).updateRewards(msg.sender);
 
-	function withdraw(uint256 currencyAmount) external {
+        // Determine corresponding CLP amount
 
-		require(currencyAmount > 0, "!amount");
-		require(block.timestamp > lastDeposited[msg.sender] + minDepositTime, "!cooldown");
+        uint256 currentBalance = _getCurrentBalance();
+        require(currentBalance > 0 && totalSupply > 0, "!empty");
 
-		IRewards(rewards).updateRewards(msg.sender);
+        uint256 utilization = getUtilization();
+        require(utilization < 10**4, "!utilization");
 
-		// Determine corresponding CLP amount
+        // CLP amount
+        uint256 amount = (currencyAmount * totalSupply) / currentBalance;
 
-		uint256 currentBalance = _getCurrentBalance();
-		require(currentBalance > 0 && totalSupply > 0, "!empty");
+        // Set to max if above max
+        if (amount >= balances[msg.sender]) {
+            amount = balances[msg.sender];
+            currencyAmount = (amount * currentBalance) / totalSupply;
+        }
 
-		uint256 utilization = getUtilization();
-		require(utilization < 10**4, "!utilization");
-		
-		// CLP amount
-		uint256 amount = currencyAmount * totalSupply / currentBalance;
+        uint256 availableBalance = (currentBalance * (10**4 - utilization)) /
+            10**4;
+        uint256 currencyAmountAfterFee = (currencyAmount *
+            (10**4 - withdrawFee)) / 10**4;
+        require(
+            currencyAmountAfterFee <= availableBalance,
+            "!available-balance"
+        );
 
-		// Set to max if above max
-		if (amount >= balances[msg.sender]) {
-			amount = balances[msg.sender];
-			currencyAmount = amount * currentBalance / totalSupply;
-		}
+        totalSupply -= amount;
+        balances[msg.sender] -= amount;
 
-		uint256 availableBalance = currentBalance * (10**4 - utilization) / 10**4;
-		uint256 currencyAmountAfterFee = currencyAmount * (10**4 - withdrawFee) / 10**4;
-		require(currencyAmountAfterFee <= availableBalance, "!available-balance");
+        _transferOut(msg.sender, currencyAmountAfterFee);
 
-		totalSupply -= amount;
-		balances[msg.sender] -= amount;
+        // Send fee to this pool's rewards contract
+        uint256 feeAmount = currencyAmount - currencyAmountAfterFee;
+        uint256 feeAmountforTreasury = (feeAmount * 25) / 100;
+        uint256 feeAmountforReward = (feeAmount * 75) / 100;
+        _transferOut(rewards, feeAmountforReward);
+        _transferOut(treasury, feeAmountforTreasury);
+        IRewards(rewards).notifyRewardReceived(feeAmount);
 
-		_transferOut(msg.sender, currencyAmountAfterFee);
+        emit Withdraw(msg.sender, currency, currencyAmountAfterFee, amount);
+    }
 
-		// Send fee to this pool's rewards contract
-		uint256 feeAmount = currencyAmount - currencyAmountAfterFee;
-    uint256 feeAmountforTreasury = feeAmount * 25 / 100;
-    uint256 feeAmountforReward = feeAmount * 75 / 100;
-		_transferOut(rewards, feeAmountforReward);
-		_transferOut(treasury, feeAmountforTreasury);
-		IRewards(rewards).notifyRewardReceived(feeAmount);
+    function creditUserProfit(address destination, uint256 amount)
+        external
+        onlyTrading
+    {
+        if (amount == 0) return;
+        uint256 currentBalance = _getCurrentBalance();
+        require(amount < currentBalance, "!balance");
+        _transferOut(destination, amount);
+    }
 
-		emit Withdraw(
-			msg.sender,
-			currency,
-			currencyAmountAfterFee,
-			amount
-		);
-		
-	}
+    // To receive ETH
+    fallback() external payable {}
 
-	function creditUserProfit(address destination, uint256 amount) external onlyTrading {
-		if (amount == 0) return;
-		uint256 currentBalance = _getCurrentBalance();
-		require(amount < currentBalance, "!balance");
-		_transferOut(destination, amount);
-	}
+    receive() external payable {}
 
-	// To receive ETH
-	fallback() external payable {}
-	receive() external payable {}
+    // Utils
 
-	// Utils
+    function _transferIn(uint256 amount) internal {
+        // adjust decimals
+        uint256 decimals = IRouter(router).getDecimals(currency);
+        amount = (amount * (10**decimals)) / UNIT;
+        IERC20(currency).safeTransferFrom(msg.sender, address(this), amount);
+    }
 
-	function _transferIn(uint256 amount) internal {
-		// adjust decimals
-		uint256 decimals = IRouter(router).getDecimals(currency);
-		amount = amount * (10**decimals) / UNIT;
-		IERC20(currency).safeTransferFrom(msg.sender, address(this), amount);
-	}
+    function _transferOut(address to, uint256 amount) internal {
+        if (amount == 0 || to == address(0)) return;
+        // adjust decimals
+        uint256 decimals = IRouter(router).getDecimals(currency);
+        amount = (amount * (10**decimals)) / UNIT;
+        if (currency == address(0)) {
+            payable(to).sendValue(amount);
+        } else {
+            IERC20(currency).safeTransfer(to, amount);
+        }
+    }
 
-	function _transferOut(address to, uint256 amount) internal {
-		if (amount == 0 || to == address(0)) return;
-		// adjust decimals
-		uint256 decimals = IRouter(router).getDecimals(currency);
-		amount = amount * (10**decimals) / UNIT;
-		if (currency == address(0)) {
-			payable(to).sendValue(amount);
-		} else {
-			IERC20(currency).safeTransfer(to, amount);
-		}
-	}
+    function _getCurrentBalance() internal view returns (uint256) {
+        uint256 currentBalance;
+        if (currency == address(0)) {
+            currentBalance = address(this).balance;
+        } else {
+            currentBalance = IERC20(currency).balanceOf(address(this));
+        }
+        uint256 decimals = IRouter(router).getDecimals(currency);
+        return (currentBalance * UNIT) / (10**decimals);
+    }
 
-	function _getCurrentBalance() internal view returns(uint256) {
-		uint256 currentBalance;
-		if (currency == address(0)) {
-			currentBalance = address(this).balance;
-		} else {
-			currentBalance = IERC20(currency).balanceOf(address(this));
-		}
-		uint256 decimals = IRouter(router).getDecimals(currency);
-		return currentBalance * UNIT / (10**decimals);
-	}
+    // Getters
 
-	// Getters
+    function getUtilization() public view returns (uint256) {
+        uint256 currentBalance = _getCurrentBalance();
+        if (currentBalance == 0) return 0;
+        return (openInterest * utilizationMultiplier) / currentBalance; // in bps
+    }
 
-	function getUtilization() public view returns(uint256) {
-		uint256 currentBalance = _getCurrentBalance();
-		if (currentBalance == 0) return 0;
-		return openInterest * utilizationMultiplier / currentBalance; // in bps
-	}
+    function getCurrencyBalance(address account)
+        external
+        view
+        returns (uint256)
+    {
+        if (totalSupply == 0) return 0;
+        uint256 currentBalance = _getCurrentBalance();
+        return (balances[account] * currentBalance) / totalSupply;
+    }
 
-	function getCurrencyBalance(address account) external view returns(uint256) {
-		if (totalSupply == 0) return 0;
-		uint256 currentBalance = _getCurrentBalance();
-		return balances[account] * currentBalance / totalSupply;
-	}
+    // In Clp
+    function getBalance(address account) external view returns (uint256) {
+        return balances[account];
+    }
 
-	// In Clp
-	function getBalance(address account) external view returns(uint256) {
-		return balances[account];
-	}
+    // Modifier
 
-	// Modifier
+    modifier onlyOwner() {
+        require(msg.sender == owner, "!owner");
+        _;
+    }
 
-	modifier onlyOwner() {
-		require(msg.sender == owner, "!owner");
-		_;
-	}
-
-	modifier onlyTrading() {
-		require(msg.sender == trading, "!trading");
-		_;
-	}
-
+    modifier onlyTrading() {
+        require(msg.sender == trading, "!trading");
+        _;
+    }
 }
