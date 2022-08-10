@@ -71,7 +71,8 @@ contract Trading {
 		bool isLong,
 		uint256 margin,
 		uint256 size,
-		bool isClose
+		bool isClose,
+		uint256 funding
 	);
 
 	event PositionUpdated(
@@ -97,7 +98,8 @@ contract Trading {
 		uint256 size,
 		uint256 fee,
 		int256 pnl,
-		bool wasLiquidated
+		bool wasLiquidated,
+		uint256 funding
 	);
 
 	constructor() {
@@ -222,7 +224,8 @@ contract Trading {
 			isLong,
 			margin,
 			size,
-			false
+			false,
+			0
 		);
 
 	}
@@ -231,7 +234,8 @@ contract Trading {
 		bytes32 productId,
 		address currency,
 		bool isLong,
-		uint256 size
+		uint256 size,
+		uint256 funding
 	) external payable {
 
 		require(size > 0, "!size");
@@ -275,7 +279,8 @@ contract Trading {
 			isLong,
 			margin,
 			size,
-			true
+			true,
+			funding
 		);
 
 	}
@@ -312,7 +317,8 @@ contract Trading {
 		bytes32 productId,
 		address currency,
 		bool isLong,
-		uint256 price
+		uint256 price,
+		uint256 funding
 	) external onlyOracle {
 
 		bytes32 key = _getPositionKey(user, productId, currency, isLong);
@@ -335,8 +341,8 @@ contract Trading {
 				if (pnl < 0) {
 					{
 						uint256 positivePnl = uint256(-1 * pnl);
-            pnlForPool = positivePnl * 75 / 100;
-            pnlForTreasury = positivePnl * 25 / 100;
+            pnlForPool = positivePnl * 75 / 100 + funding * 75 / 100;
+            pnlForTreasury = positivePnl * 25 / 100 + funding * 25 / 100;
 						_transferOut(currency, pool, pnlForPool);
 						_transferOut(currency, treasury, pnlForTreasury);
 						if (positivePnl < margin) {
@@ -361,7 +367,8 @@ contract Trading {
 					size,
 					fee,
 					pnl,
-					false
+					false,
+					funding
 				);
 
 			}
@@ -491,7 +498,8 @@ contract Trading {
 				position.size,
 				fee,
 				-1 * int256(uint256(position.margin)),
-				true
+				true,
+				0
 			);
 
 			delete positions[key];
@@ -526,7 +534,8 @@ contract Trading {
 			position.size,
 			0,
 			0,
-			false
+			false,
+			0
 		);
 
 		delete orders[key];

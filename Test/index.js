@@ -79,14 +79,15 @@ const cancelOrder = async () => {
 }
 
 app.listen(process.env.PORT || 5000, async function () {
-  const settleOrders = async (user, productId, currency, isLong, isClose, answer, nonce, newBlockNumber) => {
+  const settleOrders = async (user, productId, currency, isLong, funding, answer, nonce) => {
     console.log('settle order')
     let data = OracleContract1.methods.settleOrders(
       [user],
       [productId],
       [currency],
       [isLong],
-      [answer]
+      [answer],
+      [funding]
     )
 
     let tx = {
@@ -167,14 +168,16 @@ app.listen(process.env.PORT || 5000, async function () {
                 })
                 let nonce = await web3.eth.getTransactionCount('0xfc69685086C75Dbbb3834a524F9D36ECB8bB1745')
                 for (var i = 0; i < events.length; i++) {
-                  const { user, productId, currency, isLong, isClose } = events[i].returnValues;
+                  const { user, productId, currency, isLong, isClose, funding } = events[i].returnValues;
                   console.table({ 
+                    "time": currentTime,
                     "tx": events[i].transactionHash, 
                     "user": user, 
                     "productId": productId, 
                     "currency": currency, 
                     "isLong": isLong, 
-                    "isClose": isClose 
+                    "isClose": isClose,
+                    "funding": funding
                   })
                   let price;
                   if(productId == '0x4254432d55534400000000000000000000000000000000000000000000000000'){
@@ -185,7 +188,7 @@ app.listen(process.env.PORT || 5000, async function () {
                     price = answer
                   }
 
-                  await settleOrders(user, productId, currency, isLong, isClose, price, nonce, latestBlockNumber);
+                  await settleOrders(user, productId, currency, isLong, isClose, funding, price, nonce, latestBlockNumber);
                   nonce++;
                 }
               }
