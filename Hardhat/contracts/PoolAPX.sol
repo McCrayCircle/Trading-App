@@ -1,4 +1,5 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.0;
 
 import "./libraries/SafeERC20.sol";
@@ -19,18 +20,18 @@ contract PoolAPX {
 	uint256 public totalSupply;
 
 	// Events
-    event DepositCAP(
+    event DepositAPX(
     	address indexed user, 
     	uint256 amount
     );
-    event WithdrawCAP(
+    event WithdrawAPX(
     	address indexed user,
     	uint256 amount
     );
 
-	constructor(address _cap) {
+	constructor(address _apx) {
 		owner = msg.sender;
-		apx = _cap;
+		apx = _apx;
 	}
 
 	// Governance methods
@@ -54,7 +55,7 @@ contract PoolAPX {
 
 		IERC20(apx).safeTransferFrom(msg.sender, address(this), amount);
 
-		emit DepositCAP(
+		emit DepositAPX(
 			msg.sender,
 			amount
 		);
@@ -76,7 +77,7 @@ contract PoolAPX {
 
 		IERC20(apx).safeTransfer(msg.sender, amount);
 
-		emit WithdrawCAP(
+		emit WithdrawAPX(
 			msg.sender,
 			amount
 		);
@@ -91,7 +92,7 @@ contract PoolAPX {
 		uint256 length = IRouter(router).currenciesLength();
 		for (uint256 i = 0; i < length; i++) {
 			address currency = IRouter(router).currencies(i);
-			address rewardsContract = IRouter(router).getCapRewards(currency);
+			address rewardsContract = IRouter(router).getApxRewards(currency);
 			IRewards(rewardsContract).updateRewards(msg.sender);
 		}
 	}

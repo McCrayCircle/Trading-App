@@ -1,10 +1,10 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 interface IRouter {
     function trading() external view returns (address);
 
-    function capPool() external view returns (address);
+    function apxPool() external view returns (address);
 
     function oracle() external view returns (address);
 
@@ -24,9 +24,9 @@ interface IRouter {
 
     function getPoolShare(address currency) external view returns(uint256);
 
-    function getCapShare(address currency) external view returns(uint256);
+    function getApxShare(address currency) external view returns(uint256);
 
     function getPoolRewards(address currency) external view returns (address);
 
-    function getCapRewards(address currency) external view returns (address);
+    function getApxRewards(address currency) external view returns (address);
 }

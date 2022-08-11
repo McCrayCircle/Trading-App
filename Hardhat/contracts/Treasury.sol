@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./libraries/SafeERC20.sol";
@@ -47,17 +47,17 @@ contract Treasury {
 
 		// Contracts from Router
 		address poolRewards = IRouter(router).getPoolRewards(currency);
-		address capRewards = IRouter(router).getCapRewards(currency);
+		address apxRewards = IRouter(router).getApxRewards(currency);
 
 		// Send poolShare to pool-currency rewards contract
 		uint256 poolReward = IRouter(router).getPoolShare(currency) * amount / 10**4;
 		_transferOut(currency, poolRewards, poolReward);
 		IRewards(poolRewards).notifyRewardReceived(poolReward);
 
-		// Send capPoolShare to apx-currency rewards contract
-		uint256 capReward = IRouter(router).getCapShare(currency) * amount / 10**4;
-		_transferOut(currency, capRewards, capReward);
-		IRewards(capRewards).notifyRewardReceived(capReward);
+		// Send apxPoolShare to apx-currency rewards contract
+		uint256 apxReward = IRouter(router).getApxShare(currency) * amount / 10**4;
+		_transferOut(currency, apxRewards, apxReward);
+		IRewards(apxRewards).notifyRewardReceived(apxReward);
 
 	}
 

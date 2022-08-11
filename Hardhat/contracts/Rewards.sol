@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./libraries/SafeERC20.sol";
@@ -36,6 +36,16 @@ contract Rewards {
 		uint256 amount
 	);
 
+	event updateReward(
+		address user,
+		uint256 claimableReward,
+		uint256 previousRewardPerToken
+	);
+
+	event notifyReward(
+		uint256 amount
+	);
+
 	constructor(address _pool, address _currency) {
 		owner = msg.sender;
 		pool = _pool;
@@ -58,6 +68,8 @@ contract Rewards {
 
 	function notifyRewardReceived(uint256 amount) external onlyTreasuryOrPool {
 		pendingReward += amount; // 18 decimals
+
+		emit notifyReward(amount);
 	}
 
 	function updateRewards(address account) public {
@@ -79,6 +91,12 @@ contract Rewards {
 
 		claimableReward[account] += accountBalance * (cumulativeRewardPerTokenStored - previousRewardPerToken[account]) / UNIT;
 		previousRewardPerToken[account] = cumulativeRewardPerTokenStored;
+
+		emit updateReward(
+			account,
+			claimableReward[account],
+			previousRewardPerToken[account]
+		);
 
 	}
 
@@ -112,8 +130,8 @@ contract Rewards {
 		if (supply == 0) return currentClaimableReward;
 
 		uint256 share;
-		if (pool == IRouter(router).capPool()) {
-			share = IRouter(router).getCapShare(currency);
+		if (pool == IRouter(router).apxPool()) {
+			share = IRouter(router).getApxShare(currency);
 		} else {
 			share = IRouter(router).getPoolShare(currency);
 		}

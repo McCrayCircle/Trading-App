@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./libraries/SafeERC20.sol";
@@ -99,8 +99,7 @@ contract Trading {
 		uint256 size,
 		uint256 fee,
 		int256 pnl,
-		bool wasLiquidated,
-		uint256 funding
+		bool wasLiquidated
 	);
 
 	constructor() {
@@ -368,8 +367,7 @@ contract Trading {
 					size,
 					fee,
 					pnl,
-					false,
-					funding
+					false
 				);
 
 			}
@@ -499,8 +497,7 @@ contract Trading {
 				position.size,
 				fee,
 				-1 * int256(uint256(position.margin)),
-				true,
-				0
+				true
 			);
 
 			delete positions[key];
@@ -535,8 +532,7 @@ contract Trading {
 			position.size,
 			0,
 			0,
-			false,
-			0
+			false
 		);
 
 		delete orders[key];

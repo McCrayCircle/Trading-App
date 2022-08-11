@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "./libraries/SafeERC20.sol";
@@ -15,7 +15,7 @@ contract Router {
 	address public owner;
 	address public trading;
 	address public oracle;
-	address public capPool;
+	address public apxPool;
 	address public treasury;
 	address public darkOracle;
 
@@ -26,10 +26,10 @@ contract Router {
 	mapping(address => address) pools; // currency => contract
 	
 	mapping(address => uint256) private poolShare; // currency (eth, usdc, etc.) => bps
-	mapping(address => uint256) private capShare; // currency => bps
+	mapping(address => uint256) private apxShare; // currency => bps
 
 	mapping(address => address) poolRewards; // currency => contract
-	mapping(address => address) capRewards; // currency => contract
+	mapping(address => address) apxRewards; // currency => contract
 
 	constructor() {
 		owner = msg.sender;
@@ -51,16 +51,16 @@ contract Router {
 		return poolShare[currency];
 	}
 
-	function getCapShare(address currency) external view returns(uint256) {
-		return capShare[currency];
+	function getApxShare(address currency) external view returns(uint256) {
+		return apxShare[currency];
 	}
 
 	function getPoolRewards(address currency) external view returns(address) {
 		return poolRewards[currency];
 	}
 
-	function getCapRewards(address currency) external view returns(address) {
-		return capRewards[currency];
+	function getApxRewards(address currency) external view returns(address) {
+		return apxRewards[currency];
 	}
 
 	function getDecimals(address currency) external view returns(uint8) {
@@ -83,13 +83,13 @@ contract Router {
 	function setContracts(
 		address _treasury,
 		address _trading,
-		address _capPool,
+		address _apxPool,
 		address _oracle,
 		address _darkOracle
 	) external onlyOwner {
 		treasury = _treasury;
 		trading = _trading;
-		capPool = _capPool;
+		apxPool = _apxPool;
 		oracle = _oracle;
 		darkOracle = _darkOracle;
 	}
@@ -102,7 +102,7 @@ contract Router {
 		poolShare[currency] = share;
 	}
 	function setApxShare(address currency, uint256 share) external onlyOwner {
-		capShare[currency] = share;
+		apxShare[currency] = share;
 	}
 
 	function setPoolRewards(address currency, address _contract) external onlyOwner {
@@ -110,7 +110,7 @@ contract Router {
 	}
 
 	function setApxRewards(address currency, address _contract) external onlyOwner {
-		capRewards[currency] = _contract;
+		apxRewards[currency] = _contract;
 	}
 
 	function setOwner(address newOwner) external onlyOwner {
