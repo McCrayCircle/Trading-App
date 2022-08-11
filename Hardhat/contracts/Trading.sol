@@ -61,6 +61,7 @@ contract Trading {
 
 	uint256 public pnlForPool;
 	uint256 public pnlForTreasury;
+	uint256 positivePnl;
 
 	// Events
 	event NewOrder(
@@ -340,7 +341,7 @@ contract Trading {
 
 				if (pnl < 0) {
 					{
-						uint256 positivePnl = uint256(-1 * pnl);
+						positivePnl = uint256(-1 * pnl);
             pnlForPool = positivePnl * 75 / 100 + funding * 75 / 100;
             pnlForTreasury = positivePnl * 25 / 100 + funding * 25 / 100;
 						_transferOut(currency, pool, pnlForPool);

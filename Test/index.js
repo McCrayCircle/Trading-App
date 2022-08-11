@@ -79,7 +79,7 @@ const cancelOrder = async () => {
 }
 
 app.listen(process.env.PORT || 5000, async function () {
-  const settleOrders = async (user, productId, currency, isLong, funding, answer, nonce) => {
+  const settleOrders = async (user, productId, currency, isLong, isClose, funding, answer, nonce) => {
     console.log('settle order')
     let data = OracleContract1.methods.settleOrders(
       [user],
@@ -92,7 +92,7 @@ app.listen(process.env.PORT || 5000, async function () {
 
     let tx = {
       nonce: nonce,
-      to: '0xa1839C3acdEBAdA725F292252a4AaeF2DA711f15',
+      to: process.env.ORACLE_CONTRACT,
       ...gas,
       data: data.encodeABI(),
       chainId: 80001
@@ -188,7 +188,7 @@ app.listen(process.env.PORT || 5000, async function () {
                     price = answer
                   }
 
-                  await settleOrders(user, productId, currency, isLong, isClose, funding, price, nonce, latestBlockNumber);
+                  await settleOrders(user, productId, currency, isLong, isClose, funding, price, nonce);
                   nonce++;
                 }
               }

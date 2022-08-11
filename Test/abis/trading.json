@@ -127,6 +127,12 @@
         "internalType": "bool",
         "name": "isClose",
         "type": "bool"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "funding",
+        "type": "uint256"
       }
     ],
     "name": "NewOrder",
@@ -783,6 +789,11 @@
         "internalType": "uint256",
         "name": "price",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "funding",
+        "type": "uint256"
       }
     ],
     "name": "settleOrder",
@@ -810,6 +821,11 @@
       {
         "internalType": "uint256",
         "name": "size",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "funding",
         "type": "uint256"
       }
     ],

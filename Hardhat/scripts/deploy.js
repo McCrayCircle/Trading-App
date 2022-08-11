@@ -55,13 +55,14 @@ async function main() {
   // const Router = await hre.ethers.getContractFactory("Router");
   // const router = await Router.deploy();
   // await router.deployed();
+  const router = {address: '0x0Aa851c2C1074FF0DA0aB7211cFdDDf77daFF3b9'};
   // console.log("Router deployed to:", router.address);
 
-  // // Trading
-  // const Trading = await hre.ethers.getContractFactory("Trading");
-  // const trading = await Trading.deploy();
-  // await trading.deployed();
-  // console.log("Trading deployed to:", trading.address);
+  // Trading
+  const Trading = await hre.ethers.getContractFactory("Trading");
+  const trading = await Trading.deploy();
+  await trading.deployed();
+  console.log("Trading deployed to:", trading.address);
 
   // // Oracle
   // const Oracle = await hre.ethers.getContractFactory("Oracle");
@@ -91,12 +92,12 @@ async function main() {
   // // const usdc = {address: '0x61A45EfEa594BF57d2c522E38ef8E90534514aDA'};
   // console.log("usdc:", usdc.address);
   
-  const tWETH = await hre.ethers.getContractFactory("tWETH");
-  const tETH = await tWETH.deploy("WEH", "tWETH", 18);
-  await tETH.deployed();
+  // const tWETH = await hre.ethers.getContractFactory("tWETH");
+  // const tETH = await tWETH.deploy("WEH", "tWETH", 18);
+  // await tETH.deployed();
 
   // const tETH = {address: '0xff970a61a04b1ca14834a43f5de4533ebddb5cc8'};
-  console.log("tETH:", tETH.address);
+  // console.log("tETH:", tETH.address);
 
 
   // PoolAPX
@@ -104,14 +105,14 @@ async function main() {
   // const poolAPX = await PoolAPX.deploy(apx.address);
   // await poolAPX.deployed();
   // console.log("PoolAPX deployed to:", poolAPX.address);
-  const poolAPX = {address: '0x4D458E888073e38b3fd5756db9Aa0A8A12d51405'}
+  // const poolAPX = {address: '0x4D458E888073e38b3fd5756db9Aa0A8A12d51405'}
 
   // Pools (WETH, USDC)
-  const Pool = await hre.ethers.getContractFactory("Pool");
+  // const Pool = await hre.ethers.getContractFactory("Pool");
   
-  const poolETH = await Pool.deploy(tETH.address);
-  await poolETH.deployed();
-  console.log("poolETH deployed to:", poolETH.address);
+  // const poolETH = await Pool.deploy(tETH.address);
+  // await poolETH.deployed();
+  // console.log("poolETH deployed to:", poolETH.address);
 
   // const poolUSDC = await Pool.deploy(usdc.address);
   // await poolUSDC.deployed();
@@ -119,21 +120,21 @@ async function main() {
   
   // Rewards
 
-  const Rewards = await hre.ethers.getContractFactory("Rewards");
+  // const Rewards = await hre.ethers.getContractFactory("Rewards");
 
   // Rewards for Pools
-  const poolRewardsETH = await Rewards.deploy(poolETH.address, tETH.address);
-  await poolRewardsETH.deployed();
-  console.log("poolRewardsETH deployed to:", poolRewardsETH.address);
+  // const poolRewardsETH = await Rewards.deploy(poolETH.address, tETH.address);
+  // await poolRewardsETH.deployed();
+  // console.log("poolRewardsETH deployed to:", poolRewardsETH.address);
 
   // const poolRewardsUSDC = await Rewards.deploy(poolUSDC.address, usdc.address);
   // await poolRewardsUSDC.deployed();
   // console.log("poolRewardsUSDC deployed to:", poolRewardsUSDC.address);
 
   // Rewards for Apx
-  const apxRewardsETH = await Rewards.deploy(poolAPX.address, tETH.address);
-  await apxRewardsETH.deployed();
-  console.log("apxRewardsETH deployed to:", apxRewardsETH.address);
+  // const apxRewardsETH = await Rewards.deploy(poolAPX.address, tETH.address);
+  // await apxRewardsETH.deployed();
+  // console.log("apxRewardsETH deployed to:", apxRewardsETH.address);
 
   // const apxRewardsUSDC = await Rewards.deploy(poolAPX.address, usdc.address);
   // await apxRewardsUSDC.deployed();
@@ -175,7 +176,7 @@ async function main() {
   // console.log("Setup router currencies");
 
   // // Link contracts with Router, which also sets their dependent contract addresses
-  // await trading.setRouter(router.address);
+  await trading.setRouter(router.address);
   // await treasury.setRouter(router.address);
   // await poolAPX.setRouter(router.address);
   // await oracle.setRouter(router.address);
@@ -193,32 +194,32 @@ async function main() {
 
   // // Add products
 
-  // const products = [
-  //   {
-  //     id: 'ETH-USD',
-  //     maxLeverage: 50,
-  //     fee: 0,
-  //     interest: 16,
-  //     liquidationThreshold: 80
-  //   },
-  //   {
-  //     id: 'BTC-USD',
-  //     maxLeverage: 50,
-  //     fee: 0,
-  //     interest: 16,
-  //     liquidationThreshold: 80
-  //   }
-  // ];
+  const products = [
+    {
+      id: 'ETH-USD',
+      maxLeverage: 50,
+      fee: 0,
+      interest: 16,
+      liquidationThreshold: 80
+    },
+    {
+      id: 'BTC-USD',
+      maxLeverage: 50,
+      fee: 0,
+      interest: 16,
+      liquidationThreshold: 80
+    }
+  ];
 
-  // for (const p of products) {
-  //   await trading.addProduct(toBytes32(p.id), [
-  //     parseUnits(""+p.maxLeverage),
-  //     parseInt(p.liquidationThreshold * 100),
-  //     parseInt(p.fee * 10000),
-  //     parseInt(p.interest * 100),
-  //   ]);
-  //   console.log('Added product ' + p.id);
-  // }
+  for (const p of products) {
+    await trading.addProduct(toBytes32(p.id), [
+      parseUnits(""+p.maxLeverage),
+      parseInt(p.liquidationThreshold * 100),
+      parseInt(p.fee * 10000),
+      parseInt(p.interest * 100),
+    ]);
+    console.log('Added product ' + p.id);
+  }
 
   // // Mint some APX, USDC
   // await usdc.mint(parseUnits("100000", 6));
