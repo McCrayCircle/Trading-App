@@ -2,10 +2,10 @@ import { ethers } from "hardhat";
 
 async function main() {
 
-  // const PoolCAP = await ethers.getContractFactory('PoolCAP');
-  // const poolETH = await PoolCAP.deploy('0x9621b905e786556ec1879ac6bc730e617b35e4f0');
-  // let poolCAPAddress = await poolETH.deployed();
-  // console.log("pool eth", poolCAPAddress.address);
+  // const Poolapx = await ethers.getContractFactory('Poolapx');
+  // const poolETH = await Poolapx.deploy('0x9621b905e786556ec1879ac6bc730e617b35e4f0');
+  // let poolapxAddress = await poolETH.deployed();
+  // console.log("pool eth", poolapxAddress.address);
 
   const PoolRewards = await ethers.getContractFactory('Rewards');
   // const PoolRewardsETH = await PoolRewards.deploy('0x42AcE9aF6042F89421a39463949978e61157EbdE', '0x976f4671d3Bf00eA9FfBAB55174411E9568413dA')

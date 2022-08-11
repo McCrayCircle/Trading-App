@@ -81,8 +81,8 @@ async function main() {
   // const usdcAddress = '0x43F48c3DC6df4674219923F2d4f8880d5E3CCC4c';
   // const usdc = await (await ethers.getContractFactory("AlphaX")).attach(usdcAddress);
 
-  // const capAddress = '0x292E27B2b439Bb485265aBA27c131247B13593c1';
-  // const apx = await (await ethers.getContractFactory("AlphaX")).attach(capAddress);
+  // const apxAddress = '0x292E27B2b439Bb485265aBA27c131247B13593c1';
+  // const apx = await (await ethers.getContractFactory("AlphaX")).attach(apxAddress);
 
   // const poolETH = await (await ethers.getContractFactory("Pool")).attach('0xB224F2689BC0aFc5b6721a0807d07017D8CDddf8');
   const poolUSDC = await (await ethers.getContractFactory("Pool")).attach('0x07B0B00B9008798055071dde6f2d343782b35dC6');
@@ -90,10 +90,10 @@ async function main() {
   // const poolRewardsETH = await (await ethers.getContractFactory("Rewards")).attach(await router.getPoolRewards(ADDRESS_ZERO));
   // const poolRewardsUSDC = await (await ethers.getContractFactory("Rewards")).attach(await router.getPoolRewards(usdcAddress));
 
-  // const capPool = await (await ethers.getContractFactory("PoolAPX")).attach(await router.capPool());
+  // const apxPool = await (await ethers.getContractFactory("PoolAPX")).attach(await router.apxPool());
 
-  // const apxRewardsETH = await (await ethers.getContractFactory("Rewards")).attach(await router.getCapRewards(usdcAddress));
-  // const apxRewardsUSDC = await (await ethers.getContractFactory("Rewards")).attach(await router.getCapRewards(usdcAddress));
+  // const apxRewardsETH = await (await ethers.getContractFactory("Rewards")).attach(await router.getApxRewards(usdcAddress));
+  // const apxRewardsUSDC = await (await ethers.getContractFactory("Rewards")).attach(await router.getApxRewards(usdcAddress));
   
   // console.log('Contracts set', router.address);
 
@@ -316,7 +316,7 @@ async function main() {
     0
   , {gasLimit: 2000000});
 
-  // console.log('pool WETH params', (await poolWETH.maxDailyDrawdown()).toString(), (await poolWETH.minDepositTime()).toString(), (await poolWETH.utilizationMultiplier()).toString(), (await poolWETH.maxCap()).toString(), (await poolWETH.withdrawFee()).toString());
+  // console.log('pool WETH params', (await poolWETH.maxDailyDrawdown()).toString(), (await poolWETH.minDepositTime()).toString(), (await poolWETH.utilizationMultiplier()).toString(), (await poolWETH.maxapx()).toString(), (await poolWETH.withdrawFee()).toString());
 
   // console.log('pool WETH params', (await poolWETH.maxDailyDrawdown()).toString(), formatUnits(await poolWETH.checkpointBalance()), (await poolWETH.checkpointTimestamp()).toString(), formatUnits(await weth.balanceOf(poolWETH.address)));
 
@@ -330,7 +330,7 @@ async function main() {
   //   20
   // );
 
-  // console.log('poolUSDC params', (await poolUSDC.maxDailyDrawdown()).toString(), (await poolUSDC.minDepositTime()).toString(), (await poolUSDC.utilizationMultiplier()).toString(), (await poolUSDC.maxCap()).toString(), (await poolUSDC.withdrawFee()).toString());
+  // console.log('poolUSDC params', (await poolUSDC.maxDailyDrawdown()).toString(), (await poolUSDC.minDepositTime()).toString(), (await poolUSDC.utilizationMultiplier()).toString(), (await poolUSDC.maxapx()).toString(), (await poolUSDC.withdrawFee()).toString());
 
   // console.log('poolUSDC utilization', formatUnits(await poolUSDC.openInterest()), (await poolUSDC.getUtilization()).toString());
 

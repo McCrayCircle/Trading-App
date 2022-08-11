@@ -127,17 +127,17 @@ async function main() {
   console.log("poolRewardsMIM deployed to:", poolRewardsMIM.address);
 
   // Rewards for Apx
-  const capRewardsAVAX = await Rewards.deploy(poolAPX.address, ADDRESS_ZERO);
-  await capRewardsAVAX.deployed();
-  console.log("capRewardsAVAX deployed to:", capRewardsAVAX.address);
+  const apxRewardsAVAX = await Rewards.deploy(poolAPX.address, ADDRESS_ZERO);
+  await apxRewardsAVAX.deployed();
+  console.log("apxRewardsAVAX deployed to:", apxRewardsAVAX.address);
 
   const apxRewardsUSDC = await Rewards.deploy(poolAPX.address, usdc.address);
   await apxRewardsUSDC.deployed();
   console.log("apxRewardsUSDC deployed to:", apxRewardsUSDC.address);
 
-  const capRewardsMIM = await Rewards.deploy(poolAPX.address, mim.address);
-  await capRewardsMIM.deployed();
-  console.log("capRewardsMIM deployed to:", capRewardsMIM.address);
+  const apxRewardsMIM = await Rewards.deploy(poolAPX.address, mim.address);
+  await apxRewardsMIM.deployed();
+  console.log("apxRewardsMIM deployed to:", apxRewardsMIM.address);
 
   // Router setup
   await router.setContracts(
@@ -167,9 +167,9 @@ async function main() {
   await router.setPoolRewards(usdc.address, poolRewardsUSDC.address);
   await router.setPoolRewards(mim.address, poolRewardsMIM.address);
 
-  await router.setApxRewards(ADDRESS_ZERO, capRewardsAVAX.address);
+  await router.setApxRewards(ADDRESS_ZERO, apxRewardsAVAX.address);
   await router.setApxRewards(usdc.address, apxRewardsUSDC.address);
-  await router.setApxRewards(mim.address, capRewardsMIM.address);
+  await router.setApxRewards(mim.address, apxRewardsMIM.address);
   
   console.log("Setup router contracts");
 
@@ -187,9 +187,9 @@ async function main() {
   await poolRewardsAVAX.setRouter(router.address);
   await poolRewardsUSDC.setRouter(router.address);
   await poolRewardsMIM.setRouter(router.address);
-  await capRewardsAVAX.setRouter(router.address);
+  await apxRewardsAVAX.setRouter(router.address);
   await apxRewardsUSDC.setRouter(router.address);
-  await capRewardsMIM.setRouter(router.address);
+  await apxRewardsMIM.setRouter(router.address);
 
   console.log("Linked router with contracts");
 

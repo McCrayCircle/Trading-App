@@ -128,9 +128,9 @@ async function main() {
   console.log("poolRewardsUSDC deployed to:", poolRewardsUSDC.address);
 
   // Rewards for Apx
-  const capRewardsWETH = await Rewards.deploy(poolAPX.address, weth.address);
-  await capRewardsWETH.deployed();
-  console.log("capRewardsWETH deployed to:", capRewardsWETH.address);
+  const apxRewardsWETH = await Rewards.deploy(poolAPX.address, weth.address);
+  await apxRewardsWETH.deployed();
+  console.log("apxRewardsWETH deployed to:", apxRewardsWETH.address);
 
   const apxRewardsUSDC = await Rewards.deploy(poolAPX.address, usdc.address);
   await apxRewardsUSDC.deployed();
@@ -141,8 +141,8 @@ async function main() {
   await treasury.setPoolShare(usdc.address, 5000);
   console.log("set pool shares for treasury");
 
-  await treasury.setCapPoolShare(weth.address, 1000);
-  await treasury.setCapPoolShare(usdc.address, 1000);
+  await treasury.setapxPoolShare(weth.address, 1000);
+  await treasury.setapxPoolShare(usdc.address, 1000);
   console.log("set Apx shares for treasury");
 
   // Router setup
@@ -161,7 +161,7 @@ async function main() {
   await router.setPoolRewards(weth.address, poolRewardsWETH.address);
   await router.setPoolRewards(usdc.address, poolRewardsUSDC.address);
 
-  await router.setApxRewards(weth.address, capRewardsWETH.address);
+  await router.setApxRewards(weth.address, apxRewardsWETH.address);
   await router.setApxRewards(usdc.address, apxRewardsUSDC.address);
   
   console.log("Setup router contracts");
@@ -178,7 +178,7 @@ async function main() {
   await poolUSDC.setRouter(router.address);
   await poolRewardsWETH.setRouter(router.address);
   await poolRewardsUSDC.setRouter(router.address);
-  await capRewardsWETH.setRouter(router.address);
+  await apxRewardsWETH.setRouter(router.address);
   await apxRewardsUSDC.setRouter(router.address);
 
   console.log("Linked router with contracts");

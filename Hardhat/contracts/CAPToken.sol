@@ -511,7 +511,7 @@ contract ERC20 is Context, IERC20 {
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual { }
 }
 
-// File: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.1.0/contracts/token/ERC20/ERC20Capped.sol
+// File: https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.1.0/contracts/token/ERC20/ERC20apxped.sol
 
 // SPDX-License-Identifier: MIT
 
@@ -519,25 +519,25 @@ pragma solidity ^0.6.0;
 
 
 /**
- * @dev Extension of {ERC20} that adds a cap to the supply of tokens.
+ * @dev Extension of {ERC20} that adds a apx to the supply of tokens.
  */
-abstract contract ERC20Capped is ERC20 {
-    uint256 private _cap;
+abstract contract ERC20apxped is ERC20 {
+    uint256 private _apx;
 
     /**
-     * @dev Sets the value of the `cap`. This value is immutable, it can only be
+     * @dev Sets the value of the `apx`. This value is immutable, it can only be
      * set once during construction.
      */
-    constructor (uint256 cap) public {
-        require(cap > 0, "ERC20Capped: cap is 0");
-        _cap = cap;
+    constructor (uint256 apx) public {
+        require(apx > 0, "ERC20apxped: apx is 0");
+        _apx = apx;
     }
 
     /**
-     * @dev Returns the cap on the token's total supply.
+     * @dev Returns the apx on the token's total supply.
      */
-    function cap() public view returns (uint256) {
-        return _cap;
+    function apx() public view returns (uint256) {
+        return _apx;
     }
 
     /**
@@ -545,13 +545,13 @@ abstract contract ERC20Capped is ERC20 {
      *
      * Requirements:
      *
-     * - minted tokens must not cause the total supply to go over the cap.
+     * - minted tokens must not cause the total supply to go over the apx.
      */
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         super._beforeTokenTransfer(from, to, amount);
 
         if (from == address(0)) { // When minting tokens
-            require(totalSupply().add(amount) <= _cap, "ERC20Capped: cap exceeded");
+            require(totalSupply().add(amount) <= _apx, "ERC20apxped: apx exceeded");
         }
     }
 }
@@ -1493,18 +1493,18 @@ contract ERC20PresetMinterPauser is Context, AccessControl, ERC20Burnable, ERC20
     }
 }
 
-// File: browser/CAPToken.sol
+// File: browser/apxToken.sol
 
 pragma solidity ^0.6.2;
 
 
 
 
-contract CAPToken is ERC20PresetMinterPauser, ERC20Capped {
+contract apxToken is ERC20PresetMinterPauser, ERC20apxped {
 
-    constructor (string memory name, string memory symbol, uint256 cap) public ERC20PresetMinterPauser(name, symbol) ERC20Capped(cap) {}
+    constructor (string memory name, string memory symbol, uint256 apx) public ERC20PresetMinterPauser(name, symbol) ERC20apxped(apx) {}
     
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20PresetMinterPauser, ERC20Capped) {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override(ERC20PresetMinterPauser, ERC20apxped) {
         super._beforeTokenTransfer(from, to, amount);
     }
     

@@ -8,14 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/0xcap/protocol.git"
+    "url": "git+https://github.com/0xapx/protocol.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/0xcap/protocol/issues"
+    "url": "https://github.com/0xapx/protocol/issues"
   },
-  "homepage": "https://github.com/0xcap/protocol#readme",
+  "homepage": "https://github.com/0xapx/protocol#readme",
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-etherscan": "^3.1.0",
