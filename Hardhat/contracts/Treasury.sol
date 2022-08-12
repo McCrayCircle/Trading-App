@@ -21,6 +21,9 @@ contract Treasury {
 	address public oracle;
 
 	uint256 public constant UNIT = 10**18;
+	uint256 public expense;
+	uint256 public rewardETHForApx;
+	uint256 public rewardUSDCForApx;
 
 	constructor() {
 		owner = msg.sender;
@@ -36,6 +39,9 @@ contract Treasury {
 		router = _router;
 		oracle = IRouter(router).oracle();
 		trading = IRouter(router).trading();
+	}
+	function setExpense(uint256 _expense) external onlyOwner {
+		expense = _expense;
 	}
 
 	// Methods
@@ -61,6 +67,14 @@ contract Treasury {
 
 	}
 
+	function notifyApxReward(
+		address currency,
+		uint256 amount
+	) external onlyTrading {
+			if(IRouter(router).currencies(0) == currency) rewardETHForApx += amount;
+			if(IRouter(router).currencies(1) == currency) rewardUSDCForApx += amount;
+	}
+
 	function fundOracle(
 		address destination, 
 		uint256 amount
@@ -71,11 +85,21 @@ contract Treasury {
 	}
 
 	function sendFunds(
-		address token, 
-		address destination, 
+		address token,
+		address destination,
 		uint256 amount
 	) external onlyOwner {
 		_transferOut(token, destination, amount);
+	}
+
+	function sendApxReward(
+		address token
+	) public onlyOwner {
+		address apxRewards = IRouter(router).getApxRewards(token);
+		uint256 apxReward;
+		if(IRouter(router).currencies(0) == token) apxReward = rewardETHForApx * 30 /100;
+		if(IRouter(router).currencies(1) == token) apxReward = rewardUSDCForApx * 30 /100;
+		_transferOut(token, apxRewards, apxReward);
 	}
 
 	// To receive ETH
@@ -89,11 +113,7 @@ contract Treasury {
 		// adjust decimals
 		uint256 decimals = IRouter(router).getDecimals(currency);
 		amount = amount * (10**decimals) / UNIT;
-		if (currency == address(0)) {
-			payable(to).sendValue(amount);
-		} else {
-			IERC20(currency).safeTransfer(to, amount);
-		}
+		IERC20(currency).safeTransfer(to, amount);
 	}
 
 	// Modifiers

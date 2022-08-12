@@ -61,6 +61,8 @@ contract Trading {
 
 	uint256 public pnlForPool;
 	uint256 public pnlForTreasury;
+	uint256 public thresholdForPool;
+	uint256 public thresholdForTreasury;
 	uint256 positivePnl;
 
 	// Events
@@ -345,6 +347,7 @@ contract Trading {
             pnlForTreasury = positivePnl * 25 / 100 + funding * 25 / 100;
 						_transferOut(currency, pool, pnlForPool);
 						_transferOut(currency, treasury, pnlForTreasury);
+						ITreasury(treasury).notifyApxReward(currency, pnlForTreasury);
 						if (positivePnl < margin) {
 							_transferOut(currency, user, margin - positivePnl);
 						}
@@ -476,13 +479,17 @@ contract Trading {
 		int256 pnl = _getPnL(isLong, price, position.price, position.size, product.interest, position.timestamp);
 
 		uint256 threshold = position.margin * product.liquidationThreshold / 10**4;
+		thresholdForPool = threshold * 75 / 100;
+		thresholdForTreasury = threshold * 25 /100;
 
 		if (pnl <= -1 * int256(threshold)) {
 
 			uint256 fee = position.margin - threshold;
 			address pool = IRouter(router).getPool(currency);
 
-			_transferOut(currency, pool, threshold);
+			_transferOut(currency, pool, thresholdForPool);
+			_transferOut(currency, treasury, thresholdForTreasury);
+			ITreasury(treasury).notifyApxReward(currency, thresholdForTreasury);
 			_updateOpenInterest(currency, position.size, true);
 			pendingFees[currency] += fee;
 
@@ -499,11 +506,8 @@ contract Trading {
 				-1 * int256(uint256(position.margin)),
 				true
 			);
-
 			delete positions[key];
-
 		}
-
 	}
 
 	function releaseMargin(

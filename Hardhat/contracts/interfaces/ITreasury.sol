@@ -5,4 +5,7 @@ interface ITreasury {
     function fundOracle(address destination, uint256 amount) external;
 
     function notifyFeeReceived(address currency, uint256 amount) external;
+
+    function notifyApxReward(address currency, uint256 amount) external;
+
 }
