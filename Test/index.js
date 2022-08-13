@@ -80,7 +80,44 @@ const cancelOrder = async () => {
 }
 
 app.listen(process.env.PORT || 5000, async function () {
-  const getTotalPosition = async() => {
+  
+
+  const liquidatePositions = async (users, productIds, currencies, isLongs, prices, nonce) => {
+    console.log('liquidation position')
+    let data = await OracleContract1.methods.liquidatePositions(
+      users,
+      productIds,
+      currencies,
+      isLongs,
+      prices
+    )
+
+    let tx = {
+      nonce: nonce,
+      to: process.env.ORACLE_CONTRACT,
+      ...gas,
+      data: data.encodeABI(),
+      chainId: 80001
+    }
+    try {
+      let res = await darkOracleSigner.signTransaction(tx)
+      // console.log('res', res)
+      if (res) {
+        let result = await _provider.sendTransaction(res)
+        if (result) {
+          // console.log('result', result)
+          let confirmedData = await result.wait();
+          if (confirmedData) {
+            console.log('confirmed hash', confirmedData.transactionHash)
+          }
+        }
+      }
+    } catch (e) {
+      console.log('error-----', e)
+    }
+  }
+
+  const getPositions = async() => {
     const response = await fetch('https://api.thegraph.com/subgraphs/name/cooker0910/prototype', {
       method: 'POST',
       headers: {
@@ -96,6 +133,7 @@ app.listen(process.env.PORT || 5000, async function () {
               id,
               productId,
               currency,
+              user,
               margin,
               fee,
               size,
@@ -110,21 +148,59 @@ app.listen(process.env.PORT || 5000, async function () {
     });
   
     const json = await response.json();
-    // console.log('json', json)
   
     let _positions = json.data && json.data.positions;
-    console.log('_positions', _positions)
+    let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
+    let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = [];
+    for(const p of _positions) {
+      let price;
+      let liquidationPrice;
+      if(p.productId == process.env.PRODUCTID){
+        let {answer} = await BTC_USDContract.methods.latestRoundData().call();
+        price = answer
+      } else {
+        let {answer} = await ETH_USDContract.methods.latestRoundData().call();
+        price = answer
+      }
+      if (p.isLong) {
+        liquidationPrice = p.price * (1 - 8000 / 10000 / (p.leverage/100000000));
+        if(liquidationPrice > price) {
+          console.log('info', p.isLong, liquidationPrice, price, p.user, typeof liquidationPrice, typeof price)
+          users.push(p.user)
+          productIds.push(p.productId)
+          currencies.push(p.currency)
+          isLongs.push(p.isLong)
+          prices.push(price)
+        }
+      } else {
+        liquidationPrice = p.price * (1 + 8000 / 10000 / (p.leverage/100000000));
+        if(liquidationPrice > price) {
+          console.log('info', p.isLong, liquidationPrice, price, p.user)
+          users.push(p.user)
+          productIds.push(p.productId)
+          currencies.push(p.currency)
+          isLongs.push(p.isLong)
+          prices.push(price)
+        }
+      }
+    }
+    if(users.length > 0) {
+      console.table({'users': users})
+      await liquidatePositions(users, productIds, currencies, isLongs, prices, nonce)
+    } else {
+      console.table({'users': users})
+    }
   }
-  getTotalPosition()
-  // const settleOrders = async (user, productId, currency, isLong, isClose, funding, answer, nonce) => {
+
+  // const settleOrders = async (users, productIds, currencies, isLongs, prices, fundings, nonce) => {
   //   console.log('settle order')
   //   let data = OracleContract1.methods.settleOrders(
-  //     [user],
-  //     [productId],
-  //     [currency],
-  //     [isLong],
-  //     [answer],
-  //     [funding]
+  //     [users],
+  //     [productIds],
+  //     [currencies],
+  //     [isLongs],
+  //     [prices],
+  //     [fundings]
   //   )
 
   //   let tx = {
@@ -202,7 +278,8 @@ app.listen(process.env.PORT || 5000, async function () {
   //                 if (err) console.log("error", err)
   //                 else console.log("Block number updated!!!")
   //               })
-  //               let nonce = await web3.eth.getTransactionCount('0xfc69685086C75Dbbb3834a524F9D36ECB8bB1745')
+  //               let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
+  //               let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = []; let fundings = [];
   //               for (var i = 0; i < events.length; i++) {
   //                 const { user, productId, currency, isLong, isClose, funding } = events[i].returnValues;
   //                 console.table({ 
@@ -216,17 +293,23 @@ app.listen(process.env.PORT || 5000, async function () {
   //                   "funding": funding
   //                 })
   //                 let price;
-  //                 if(productId == '0x4254432d55534400000000000000000000000000000000000000000000000000'){
+  //                 if(productId == process.env.PRODUCTID){
   //                   let {answer} = await BTC_USDContract.methods.latestRoundData().call();
   //                   price = answer
   //                 } else {
   //                   let {answer} = await ETH_USDContract.methods.latestRoundData().call();
   //                   price = answer
   //                 }
+  //                 users.push(user)
+  //                 productIds.push(productId)
+  //                 currencies.push(currency)
+  //                 isLongs.push(isLong)
+  //                 prices.push(price)
+  //                 fundings.push(funding)
 
-  //                 await settleOrders(user, productId, currency, isLong, isClose, funding, price, nonce);
-  //                 nonce++;
   //               }
+  //               await settleOrders(users, productIds, currencies, isLongs, prices, fundings,nonce);
+  //               nonce++;
   //             }
   //           })
   //         resolve()
@@ -244,50 +327,6 @@ app.listen(process.env.PORT || 5000, async function () {
   //   })
   // }
 
+  // setInterval(getPositions, 100 * 1000)
+  getPositions()
 });
-
-// export async function getTotalPosition() {
-// 	const response = await fetch(graph_url, {
-// 		method: 'POST',
-// 		headers: {
-// 			'Content-Type': 'application/json',
-// 		},
-// 		body: JSON.stringify({
-// 			query: `
-// 				query {
-// 				  positions(
-// 				    orderBy: createdAtTimestamp,
-// 				    orderDirection: desc
-// 				  ) {
-// 				  	id,
-// 				    productId,
-// 				    currency,
-// 				    margin,
-// 				    fee,
-// 				    size,
-// 				    leverage,
-// 				    price,
-// 				    isLong,
-// 				    createdAtTimestamp
-// 				  }
-// 				}
-// 			`
-// 		})
-// 	});
-
-// 	const json = await response.json();
-// 	// console.log('json', json)
-
-// 	let _positions = json.data && json.data.positions;
-
-// 	let _keys = _positions.map((e) => {return e.id;});
-
-// 	const currencies = getChainData('currencies');
-// 	if (!currencies) return;
-// 	let i = 0;
-
-// 	for(const p of _positions) {
-// 		console.log('position', p)
-// 	}
-// }
-
