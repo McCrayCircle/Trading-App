@@ -192,141 +192,140 @@ app.listen(process.env.PORT || 5000, async function () {
     }
   }
 
-  // const settleOrders = async (users, productIds, currencies, isLongs, prices, fundings, nonce) => {
-  //   console.log('settle order')
-  //   let data = OracleContract1.methods.settleOrders(
-  //     [users],
-  //     [productIds],
-  //     [currencies],
-  //     [isLongs],
-  //     [prices],
-  //     [fundings]
-  //   )
+  const settleOrders = async (users, productIds, currencies, isLongs, prices, fundings, nonce) => {
+    console.log('settle order')
+    let data = await OracleContract1.methods.settleOrders(
+      users,
+      productIds,
+      currencies,
+      isLongs,
+      prices,
+      fundings
+    )
 
-  //   let tx = {
-  //     nonce: nonce,
-  //     to: process.env.ORACLE_CONTRACT,
-  //     ...gas,
-  //     data: data.encodeABI(),
-  //     chainId: 80001
-  //   }
-  //   try {
-  //     let res = await darkOracleSigner.signTransaction(tx)
-  //     // console.log('res', res)
-  //     if (res) {
-  //       let result = await _provider.sendTransaction(res)
-  //       if (result) {
-  //         // console.log('result', result)
-  //         let confirmedData = await result.wait();
-  //         if (confirmedData) {
-  //           console.log('confirmed hash', confirmedData.transactionHash)
-  //         }
-  //       }
-  //     }
-  //   } catch (e) {
-  //     console.log('error-----', e)
-  //   }
-  // }
+    let tx = {
+      nonce: nonce,
+      to: process.env.ORACLE_CONTRACT,
+      ...gas,
+      data: data.encodeABI(),
+      chainId: 80001
+    }
+    try {
+      let res = await darkOracleSigner.signTransaction(tx)
+      // console.log('res', res)
+      if (res) {
+        let result = await _provider.sendTransaction(res)
+        if (result) {
+          // console.log('result', result)
+          let confirmedData = await result.wait();
+          if (confirmedData) {
+            console.log('confirmed hash', confirmedData.transactionHash)
+          }
+        }
+      }
+    } catch (e) {
+      console.log('error-----', e)
+    }
+  }
 
-  // const getLatestBlockNumber = async () => {
-  //   try {
-  //     // Get latest event's blocknumber and block id from mongodb
-  //     Block.find((err, result) => {
-  //       if (err) console.log("error", err)
-  //       else {
-  //         Object.values(result).map(function (block) {
-  //           confirmedBlockNumber = block.blockNumber
-  //           id = block._id
-  //         })
-  //       }
-  //     })
-  //   } catch (error) {
-  //     console.error("GetHead Event Err: add event info", error);
-  //   }
-  // }
+  const getLatestBlockNumber = async () => {
+    try {
+      // Get latest event's blocknumber and block id from mongodb
+      Block.find((err, result) => {
+        if (err) console.log("error", err)
+        else {
+          Object.values(result).map(function (block) {
+            confirmedBlockNumber = block.blockNumber
+            id = block._id
+          })
+        }
+      })
+    } catch (error) {
+      console.error("GetHead Event Err: add event info", error);
+    }
+  }
   
-  // for(; ;) {
-  //   confirmedBlockNumber = await getLatestBlockNumber();
-  //   let latestBlockNumber = await web3.eth.getBlockNumber();
-  //   console.log('block number', latestBlockNumber, confirmedBlockNumber)
-  //   try{
-  //     await new Promise(async (resolve, reject) => {
-  //       if (latestBlockNumber <= confirmedBlockNumber + 1) {
-  //         console.log('here', latestBlockNumber, confirmedBlockNumber)
-  //         resolve();
-  //       }
-  //       try {
-  //         TradingcontractWeb3.getPastEvents('NewOrder', {
-  //           fromBlock: confirmedBlockNumber,
-  //           toBlock: latestBlockNumber
-  //         }, function (error, events) { return; })
-  //           .then(async (events) => {
-  //             let date_ob = new Date();
-  //             let date = ("0" + date_ob.getDate()).slice(-2);
-  //             let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-  //             let year = date_ob.getFullYear();
-  //             let hours = date_ob.getHours();
-  //             let minutes = date_ob.getMinutes();
-  //             let seconds = date_ob.getSeconds();
-  //             let currentTime = year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds;
-  //             console.log('currentTime->', currentTime, 'blockNumber->', latestBlockNumber, confirmedBlockNumber, ', events->', events.length)
-  //             if (events.length > 0) {
-  //               const updateData = {
-  //                 blockNumber: latestBlockNumber,
-  //               }
-  //               Block.findByIdAndUpdate(id, updateData, { new: true }, function (err, res) {
-  //                 if (err) console.log("error", err)
-  //                 else console.log("Block number updated!!!")
-  //               })
-  //               let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
-  //               let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = []; let fundings = [];
-  //               for (var i = 0; i < events.length; i++) {
-  //                 const { user, productId, currency, isLong, isClose, funding } = events[i].returnValues;
-  //                 console.table({ 
-  //                   "time": currentTime,
-  //                   "tx": events[i].transactionHash, 
-  //                   "user": user, 
-  //                   "productId": productId, 
-  //                   "currency": currency, 
-  //                   "isLong": isLong, 
-  //                   "isClose": isClose,
-  //                   "funding": funding
-  //                 })
-  //                 let price;
-  //                 if(productId == process.env.PRODUCTID){
-  //                   let {answer} = await BTC_USDContract.methods.latestRoundData().call();
-  //                   price = answer
-  //                 } else {
-  //                   let {answer} = await ETH_USDContract.methods.latestRoundData().call();
-  //                   price = answer
-  //                 }
-  //                 users.push(user)
-  //                 productIds.push(productId)
-  //                 currencies.push(currency)
-  //                 isLongs.push(isLong)
-  //                 prices.push(price)
-  //                 fundings.push(funding)
+  for(; ;) {
+    confirmedBlockNumber = await getLatestBlockNumber();
+    let latestBlockNumber = await web3.eth.getBlockNumber();
+    console.log('block number', latestBlockNumber, confirmedBlockNumber)
+    try{
+      await new Promise(async (resolve, reject) => {
+        if (latestBlockNumber <= confirmedBlockNumber + 1) {
+          console.log('here', latestBlockNumber, confirmedBlockNumber)
+          resolve();
+        }
+        try {
+          TradingcontractWeb3.getPastEvents('NewOrder', {
+            fromBlock: confirmedBlockNumber,
+            toBlock: latestBlockNumber
+          }, function (error, events) { return; })
+            .then(async (events) => {
+              let date_ob = new Date();
+              let date = ("0" + date_ob.getDate()).slice(-2);
+              let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+              let year = date_ob.getFullYear();
+              let hours = date_ob.getHours();
+              let minutes = date_ob.getMinutes();
+              let seconds = date_ob.getSeconds();
+              let currentTime = year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds;
+              console.log('currentTime->', currentTime, 'blockNumber->', latestBlockNumber, confirmedBlockNumber, ', events->', events.length)
+              if (events.length > 0) {
+                const updateData = {
+                  blockNumber: latestBlockNumber,
+                }
+                Block.findByIdAndUpdate(id, updateData, { new: true }, function (err, res) {
+                  if (err) console.log("error", err)
+                  else console.log("Block number updated!!!")
+                })
+                let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
+                let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = []; let fundings = [];
+                for (var i = 0; i < events.length; i++) {
+                  const { user, productId, currency, isLong, isClose, funding } = events[i].returnValues;
+                  console.table({ 
+                    "time": currentTime,
+                    "tx": events[i].transactionHash, 
+                    "user": user, 
+                    "productId": productId, 
+                    "currency": currency, 
+                    "isLong": isLong, 
+                    "isClose": isClose,
+                    "funding": funding
+                  })
+                  let price;
+                  if(productId == process.env.PRODUCTID){
+                    let {answer} = await BTC_USDContract.methods.latestRoundData().call();
+                    price = answer
+                  } else {
+                    let {answer} = await ETH_USDContract.methods.latestRoundData().call();
+                    price = answer
+                  }
+                  users.push(user)
+                  productIds.push(productId)
+                  currencies.push(currency)
+                  isLongs.push(isLong)
+                  prices.push(price)
+                  fundings.push(funding)
 
-  //               }
-  //               await settleOrders(users, productIds, currencies, isLongs, prices, fundings,nonce);
-  //               nonce++;
-  //             }
-  //           })
-  //         resolve()
-  //       } catch (e) {
-  //         console.log('error', e)
-  //         reject(e)
-  //       }
-  //     })
-  //   } catch (e) {
-  //     console.log('error', e)
-  //   }
+                }
+                await settleOrders(users, productIds, currencies, isLongs, prices, fundings,nonce);
+                nonce++;
+              }
+            })
+          resolve()
+        } catch (e) {
+          console.log('error', e)
+          reject(e)
+        }
+      })
+    } catch (e) {
+      console.log('error', e)
+    }
 
-  //   await new Promise((resolve) => {
-  //     setTimeout(resolve, 40 * 1000)
-  //   })
-  // }
+    await new Promise((resolve) => {
+      setTimeout(resolve, 40 * 1000)
+    })
+  }
 
-  // setInterval(getPositions, 100 * 1000)
-  getPositions()
+  setInterval(getPositions, 100 * 1000)
 });
