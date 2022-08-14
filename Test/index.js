@@ -71,7 +71,7 @@ const submitOrder = async () => {
 const cancelOrder = async () => {
   let res = await TradingContract.cancelOrder(
     toBytes32('ETH-USD'),
-    '0x976f4671d3Bf00eA9FfBAB55174411E9568413dA',
+    '0xec8225B3cae93cad610380B6C3d522be98090C20',
     true
   )
   console.log('res', res)
@@ -152,7 +152,6 @@ app.listen(process.env.PORT || 5000, async function () {
     let _positions = json.data && json.data.positions;
     let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
     let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = [];
-    console.log('_positions', _positions)
     for(const p of _positions) {
       let price;
       let liquidationPrice;
@@ -184,7 +183,7 @@ app.listen(process.env.PORT || 5000, async function () {
       }
     }
     if(users.length > 0) {
-      console.table({'liquidation users': users, 'prices': prices})
+      console.table({'liquidation users': users})
       await liquidatePositions(users, productIds, currencies, isLongs, prices, nonce)
     } else {
       console.table({'users': users})
@@ -243,7 +242,8 @@ app.listen(process.env.PORT || 5000, async function () {
       console.error("GetHead Event Err: add event info", error);
     }
   }
-  setInterval(getPositions, 5 * 1000)
+
+  setInterval(getPositions, 100 * 1000)
   
   for(; ;) {
     confirmedBlockNumber = await getLatestBlockNumber();
@@ -279,19 +279,9 @@ app.listen(process.env.PORT || 5000, async function () {
                   else console.log("Block number updated!!!")
                 })
                 let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
-                let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = []; let fundings = [];
+                let users = []; let productIds = []; let currencies = []; let isLongs = []; let isCloses = [];let prices = []; let fundings = [];
                 for (var i = 0; i < events.length; i++) {
                   const { user, productId, currency, isLong, isClose, funding } = events[i].returnValues;
-                  console.table({ 
-                    "time": currentTime,
-                    "tx": events[i].transactionHash, 
-                    "user": user, 
-                    "productId": productId, 
-                    "currency": currency, 
-                    "isLong": isLong, 
-                    "isClose": isClose,
-                    "funding": funding
-                  })
                   let price;
                   if(productId == process.env.PRODUCTID){
                     let {answer} = await BTC_USDContract.methods.latestRoundData().call();
@@ -304,10 +294,21 @@ app.listen(process.env.PORT || 5000, async function () {
                   productIds.push(productId)
                   currencies.push(currency)
                   isLongs.push(isLong)
+                  isCloses.push(isClose)
                   prices.push(price)
                   fundings.push(funding)
 
                 }
+                console.table({ 
+                  "time": currentTime,
+                  "user": users, 
+                  "productId": productIds, 
+                  "currency": currencies, 
+                  "isLong": isLongs, 
+                  "isClose": isCloses,
+                  "funding": fundings
+                })
+                console.log(users, '\n', productIds, '\n', currencies, '\n', isLongs, '\n', prices, '\n', fundings)
                 await settleOrders(users, productIds, currencies, isLongs, prices, fundings,nonce);
                 nonce++;
               }
@@ -326,5 +327,6 @@ app.listen(process.env.PORT || 5000, async function () {
       setTimeout(resolve, 40 * 1000)
     })
   }
+
 
 });
