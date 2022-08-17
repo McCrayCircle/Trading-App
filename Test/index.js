@@ -18,11 +18,13 @@ const account2 = new ethers.Wallet(process.env.ACCOUNT2, _provider)
 const { Block } = require('./db/Block.model')
 const TradingAbi = require('./abis/trading.json')
 const OracleAbi = require('./abis/oracle.json')
+const TreasuryAbi = require('./abis/treasury.json')
 const ETH_USD = require('./abis/ETH-USD.json')
 const BTC_USD = require('./abis/BTC-USD.json')
 
 const OracleContract = new ethers.Contract(process.env.ORACLE_CONTRACT, OracleAbi, darkOracle)
 const TradingContract = new ethers.Contract(process.env.TRADING_CONTRACT, TradingAbi, account);
+const TreasuryContract = new ethers.Contract(process.env.TREASURY_CONTRACT, TreasuryAbi, account);
 const ETH_USDContract = new mainnetWeb3.eth.Contract(ETH_USD, process.env.ETH_USD_CONTRACT)
 const BTC_USDContract = new mainnetWeb3.eth.Contract(BTC_USD, process.env.BTC_USD_CONTRACT)
 const TradingcontractWeb3 = new web3.eth.Contract(TradingAbi, process.env.TRADING_CONTRACT)
@@ -78,6 +80,20 @@ const cancelOrder = async () => {
   let result = await res.wait();
   console.log('result', result)
 }
+
+const sendApxReward = async() => {
+  try{
+    console.log(1)
+    let res = await TreasuryContract.sendApxReward('0x7b3E53f398bDbCBc26B978160d01dA5379270796')
+    console.log(2)
+    let tx = await res.wait()
+    console.log('res', tx)
+  } catch(e) {
+    console.log('error', e)
+  }
+
+}
+
 
 app.listen(process.env.PORT || 5000, async function () {
   
@@ -183,7 +199,7 @@ app.listen(process.env.PORT || 5000, async function () {
       }
     }
     if(users.length > 0) {
-      console.table({'liquidation users': users})
+      // console.table({'liquidation users': users})
       await liquidatePositions(users, productIds, currencies, isLongs, prices, nonce)
     } else {
       console.table({'users': users})
@@ -299,7 +315,7 @@ app.listen(process.env.PORT || 5000, async function () {
                   fundings.push(funding)
 
                 }
-                console.table({ 
+                console.log({ 
                   "time": currentTime,
                   "user": users, 
                   "productId": productIds, 
@@ -327,6 +343,4 @@ app.listen(process.env.PORT || 5000, async function () {
       setTimeout(resolve, 40 * 1000)
     })
   }
-
-
 });
