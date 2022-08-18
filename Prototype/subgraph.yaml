@@ -6,7 +6,7 @@ dataSources:
     name: Trading
     network: mumbai
     source:
-      address: "0xAdAe391A5182E93Bc1019780951f488E6c5694fc"
+      address: "0x8095dEE86c3DB8209a27939814C2e26eC250B386"
       abi: Trading
       startBlock: 27646130
     mapping:
