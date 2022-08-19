@@ -22,19 +22,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "expense",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -48,24 +35,6 @@
       }
     ],
     "name": "fundOracle",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "currency",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "notifyApxReward",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -116,32 +85,6 @@
   },
   {
     "inputs": [],
-    "name": "rewardEthForApx",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "rewardUsdcForApx",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "router",
     "outputs": [
       {
@@ -159,6 +102,11 @@
         "internalType": "address",
         "name": "token",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "name": "sendApxReward",
@@ -185,19 +133,6 @@
       }
     ],
     "name": "sendFunds",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_expense",
-        "type": "uint256"
-      }
-    ],
-    "name": "setExpense",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

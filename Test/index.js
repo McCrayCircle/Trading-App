@@ -21,12 +21,19 @@ const OracleAbi = require('./abis/oracle.json')
 const ETH_USD = require('./abis/ETH-USD.json')
 const BTC_USD = require('./abis/BTC-USD.json')
 
-const OracleContract = new ethers.Contract(process.env.ORACLE_CONTRACT, OracleAbi, darkOracle)
+// const OracleContract = new ethers.Contract(process.env.ORACLE_CONTRACT, OracleAbi, darkOracle)
 const TradingContract = new ethers.Contract(process.env.TRADING_CONTRACT, TradingAbi, account);
 const ETH_USDContract = new mainnetWeb3.eth.Contract(ETH_USD, process.env.ETH_USD_CONTRACT)
 const BTC_USDContract = new mainnetWeb3.eth.Contract(BTC_USD, process.env.BTC_USD_CONTRACT)
 const TradingcontractWeb3 = new web3.eth.Contract(TradingAbi, process.env.TRADING_CONTRACT)
-const OracleContract1 = new web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
+// const OracleContract1 = new web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
+
+const rpcs = [
+  'https://polygon-mumbai.g.alchemy.com/v2/g-7R1YtzCCSO3rIyc9pKFmRs48rt2EqX',
+  'https://polygon-mumbai.g.alchemy.com/v2/zc4CzqwB0LjNvHXdAYwGFQrDqfE1uNY-',
+  'https://polygon-mumbai.g.alchemy.com/v2/VFCowlE8aG7cSC17T52wbQAL387ycrzc',
+  'https://polygon-mumbai.g.alchemy.com/v2/i3ONwE5lyqGdDggxSuRPb102ek8hFhHU'
+]
 
 const app = express();
 app.use(cors());
@@ -65,7 +72,6 @@ const submitOrder = async () => {
     parseUnits(101),
     { value: parseUnits(0.000000000000, 18) }
   )
-  console.log('res', res)
 }
 
 const cancelOrder = async () => {
@@ -74,17 +80,15 @@ const cancelOrder = async () => {
     '0x976f4671d3Bf00eA9FfBAB55174411E9568413dA',
     true
   )
-  console.log('res', res)
   let result = await res.wait();
-  console.log('result', result)
 }
 
 app.listen(process.env.PORT || 5000, async function () {
   
-
-  const liquidatePositions = async (users, productIds, currencies, isLongs, prices, nonce) => {
+  const liquidatePositions = async (_web3, users, productIds, currencies, isLongs, prices, nonce) => {
     console.log('liquidation position')
-    let data = await OracleContract1.methods.liquidatePositions(
+    const OracleContract2 = new _web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
+    let data = await OracleContract2.methods.liquidatePositions(
       users,
       productIds,
       currencies,
@@ -101,11 +105,9 @@ app.listen(process.env.PORT || 5000, async function () {
     }
     try {
       let res = await darkOracleSigner.signTransaction(tx)
-      // console.log('res', res)
       if (res) {
         let result = await _provider.sendTransaction(res)
         if (result) {
-          // console.log('result', result)
           let confirmedData = await result.wait();
           if (confirmedData) {
             console.log('confirmed hash', confirmedData.transactionHash)
@@ -117,7 +119,11 @@ app.listen(process.env.PORT || 5000, async function () {
     }
   }
 
+  var j = 0;
+
   const getPositions = async() => {
+
+    var web3 = new Web3(rpcs[j]);
     const response = await fetch('https://api.thegraph.com/subgraphs/name/cooker0910/prototype', {
       method: 'POST',
       headers: {
@@ -164,7 +170,6 @@ app.listen(process.env.PORT || 5000, async function () {
       }
       if (p.isLong) {
         liquidationPrice = p.price * (1 - 8000 / 10000 / (p.leverage/100000000));
-        console.log('price', p.isLong, liquidationPrice, price)
         if(liquidationPrice > price) {
           users.push(p.user)
           productIds.push(p.productId)
@@ -174,7 +179,6 @@ app.listen(process.env.PORT || 5000, async function () {
         }
       } else {
         liquidationPrice = p.price * (1 + 8000 / 10000 / (p.leverage/100000000));
-        console.log('price', p.isLong, liquidationPrice, price)
         if(liquidationPrice < price) {
           users.push(p.user)
           productIds.push(p.productId)
@@ -186,15 +190,19 @@ app.listen(process.env.PORT || 5000, async function () {
     }
     if(users.length > 0) {
       console.table({'liquidation users': users})
-      await liquidatePositions(users, productIds, currencies, isLongs, prices, nonce)
+      await liquidatePositions(web3, users, productIds, currencies, isLongs, prices, nonce)
     } else {
       console.table({'users': users})
     }
+
+    j++;
+    if(j == 4) j = 0;
   }
 
-  const settleOrders = async (users, productIds, currencies, isLongs, prices, fundings, nonce) => {
+  const settleOrders = async (_web3, users, productIds, currencies, isLongs, prices, fundings, nonce) => {
     console.log('settle order')
-    let data = await OracleContract1.methods.settleOrders(
+    const OracleContract = new _web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
+    let data = await OracleContract.methods.settleOrders(
       users,
       productIds,
       currencies,
@@ -212,11 +220,9 @@ app.listen(process.env.PORT || 5000, async function () {
     }
     try {
       let res = await darkOracleSigner.signTransaction(tx)
-      // console.log('res', res)
       if (res) {
         let result = await _provider.sendTransaction(res)
         if (result) {
-          // console.log('result', result)
           let confirmedData = await result.wait();
           if (confirmedData) {
             console.log('confirmed hash', confirmedData.transactionHash)
@@ -245,89 +251,93 @@ app.listen(process.env.PORT || 5000, async function () {
     }
   }
 
-  setInterval(getPositions, 10 * 1000)
+  setInterval(getPositions, 100 * 1000)
+
+  var i = 0
   
-  // for(; ;) {
-  //   confirmedBlockNumber = await getLatestBlockNumber();
-  //   let latestBlockNumber = await web3.eth.getBlockNumber();
-  //   console.log('block number', latestBlockNumber, confirmedBlockNumber)
-  //   try{
-  //     await new Promise(async (resolve, reject) => {
-  //       if (latestBlockNumber <= confirmedBlockNumber + 1) {
-  //         console.log('here', latestBlockNumber, confirmedBlockNumber)
-  //         resolve();
-  //       }
-  //       try {
-  //         TradingcontractWeb3.getPastEvents('NewOrder', {
-  //           fromBlock: confirmedBlockNumber,
-  //           toBlock: latestBlockNumber
-  //         }, function (error, events) { return; })
-  //           .then(async (events) => {
-  //             let date_ob = new Date();
-  //             let date = ("0" + date_ob.getDate()).slice(-2);
-  //             let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
-  //             let year = date_ob.getFullYear();
-  //             let hours = date_ob.getHours();
-  //             let minutes = date_ob.getMinutes();
-  //             let seconds = date_ob.getSeconds();
-  //             let currentTime = year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds;
-  //             console.log('currentTime->', currentTime, 'blockNumber->', latestBlockNumber, confirmedBlockNumber, ', events->', events.length)
-  //             if (events.length > 0) {
-  //               const updateData = {
-  //                 blockNumber: latestBlockNumber,
-  //               }
-  //               Block.findByIdAndUpdate(id, updateData, { new: true }, function (err, res) {
-  //                 if (err) console.log("error", err)
-  //                 else console.log("Block number updated!!!")
-  //               })
-  //               let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
-  //               let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = []; let fundings = [];
-  //               for (var i = 0; i < events.length; i++) {
-  //                 const { user, productId, currency, isLong, isClose, funding } = events[i].returnValues;
-  //                 console.table({ 
-  //                   "time": currentTime,
-  //                   "tx": events[i].transactionHash, 
-  //                   "user": user, 
-  //                   "productId": productId, 
-  //                   "currency": currency, 
-  //                   "isLong": isLong, 
-  //                   "isClose": isClose,
-  //                   "funding": funding
-  //                 })
-  //                 let price;
-  //                 if(productId == process.env.PRODUCTID){
-  //                   let {answer} = await BTC_USDContract.methods.latestRoundData().call();
-  //                   price = answer
-  //                 } else {
-  //                   let {answer} = await ETH_USDContract.methods.latestRoundData().call();
-  //                   price = answer
-  //                 }
-  //                 users.push(user)
-  //                 productIds.push(productId)
-  //                 currencies.push(currency)
-  //                 isLongs.push(isLong)
-  //                 prices.push(price)
-  //                 fundings.push(funding)
+  for(; ;) {
+    var web3 = new Web3(rpcs[i]);
+    confirmedBlockNumber = await getLatestBlockNumber();
+    let latestBlockNumber = await web3.eth.getBlockNumber();
+    console.log('block number', latestBlockNumber, confirmedBlockNumber)
+    try{
+      await new Promise(async (resolve, reject) => {
+        if (latestBlockNumber <= confirmedBlockNumber + 1) {
+          console.log('here', latestBlockNumber, confirmedBlockNumber)
+          resolve();
+        }
+        try {
+          new web3.eth.Contract(TradingAbi, process.env.TRADING_CONTRACT).getPastEvents('NewOrder', {
+            fromBlock: confirmedBlockNumber,
+            toBlock: latestBlockNumber
+          }, function (error, events) { return; })
+            .then(async (events) => {
+              let date_ob = new Date();
+              let date = ("0" + date_ob.getDate()).slice(-2);
+              let month = ("0" + (date_ob.getMonth() + 1)).slice(-2);
+              let year = date_ob.getFullYear();
+              let hours = date_ob.getHours();
+              let minutes = date_ob.getMinutes();
+              let seconds = date_ob.getSeconds();
+              let currentTime = year + "-" + month + "-" + date + " " + hours + ":" + minutes + ":" + seconds;
+              console.log('currentTime->', currentTime, 'blockNumber->', latestBlockNumber, confirmedBlockNumber, ', events->', events.length)
+              if (events.length > 0) {
+                const updateData = {
+                  blockNumber: latestBlockNumber,
+                }
+                Block.findByIdAndUpdate(id, updateData, { new: true }, function (err, res) {
+                  if (err) console.log("error", err)
+                  else console.log("Block number updated!!!")
+                })
+                let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
+                let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = []; let fundings = [];
+                for (var i = 0; i < events.length; i++) {
+                  const { user, productId, currency, isLong, isClose, funding } = events[i].returnValues;
+                  console.table({ 
+                    "time": currentTime,
+                    "tx": events[i].transactionHash, 
+                    "user": user, 
+                    "productId": productId, 
+                    "currency": currency, 
+                    "isLong": isLong, 
+                    "isClose": isClose,
+                    "funding": funding
+                  })
+                  let price;
+                  if(productId == process.env.PRODUCTID){
+                    let {answer} = await BTC_USDContract.methods.latestRoundData().call();
+                    price = answer
+                  } else {
+                    let {answer} = await ETH_USDContract.methods.latestRoundData().call();
+                    price = answer
+                  }
+                  users.push(user)
+                  productIds.push(productId)
+                  currencies.push(currency)
+                  isLongs.push(isLong)
+                  prices.push(price)
+                  fundings.push(funding)
 
-  //               }
-  //               await settleOrders(users, productIds, currencies, isLongs, prices, fundings,nonce);
-  //               nonce++;
-  //             }
-  //           })
-  //         resolve()
-  //       } catch (e) {
-  //         console.log('error', e)
-  //         reject(e)
-  //       }
-  //     })
-  //   } catch (e) {
-  //     console.log('error', e)
-  //   }
+                }
+                await settleOrders(web3, users, productIds, currencies, isLongs, prices, fundings,nonce);
+                nonce++;
+              }
+            })
+          resolve()
+        } catch (e) {
+          console.log('error', e)
+          reject(e)
+        }
+      })
+    } catch (e) {
+      console.log('error', e)
+    }
 
-  //   await new Promise((resolve) => {
-  //     setTimeout(resolve, 40 * 1000)
-  //   })
-  // }
-
+    await new Promise((resolve) => {
+      setTimeout(resolve, 40 * 1000)
+    })
+    i++;
+    if(i == 4) i = 0
+  }
 
 });
