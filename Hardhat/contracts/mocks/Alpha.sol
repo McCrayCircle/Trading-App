@@ -5,10 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract AlphaX is ERC20 {
 
-    uint8 _decimals;
+    uint8 _decimals = 18;
 
-    constructor(string memory name, string memory symbol, uint8 __decimals) ERC20(name, symbol) {
-        _decimals = __decimals;
+    constructor() ERC20("Alpha X", "APX") {
     }
 
     function decimals() public view virtual override returns (uint8) {
@@ -16,8 +15,8 @@ contract AlphaX is ERC20 {
         return 18;
     }
 
-    function mint(uint256 amount) public {
-        _mint(msg.sender, amount);
+    function mint(address to, uint256 amount) public {
+        _mint(to, amount);
     }
 
 }

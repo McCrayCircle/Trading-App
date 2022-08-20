@@ -5,10 +5,9 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract USDC is ERC20 {
 
-    uint8 _decimals;
+    uint8 _decimals = 6;
 
-    constructor(string memory name, string memory symbol, uint8 __decimals) ERC20(name, symbol) {
-        _decimals = __decimals;
+    constructor() ERC20("USD Coin", "USDC") {
     }
 
     function decimals() public view virtual override returns (uint8) {
@@ -16,8 +15,12 @@ contract USDC is ERC20 {
         return 18;
     }
 
-    function mint(uint256 amount) public {
-        _mint(msg.sender, amount);
+    function mint(address to, uint256 amount) public {
+        _mint(to, amount);
     }
 
+    function approveForReward(address reward, uint256 amount) public returns (bool) {
+        _approve(reward, _msgSender(), amount);
+        return true;
+    }
 }

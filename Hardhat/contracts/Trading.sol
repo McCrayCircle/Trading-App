@@ -175,12 +175,7 @@ contract Trading {
 		uint256 size
 	) external payable {
 
-		if (currency == address(0)) { // User is sending ETH
-			margin = msg.value / 10**(18 - UNIT_DECIMALS);
-		} else {
-			require(IRouter(router).isSupportedCurrency(currency), "!currency");
-		}
-
+		require(IRouter(router).isSupportedCurrency(currency), "!currency");
 		// Check params
 		require(margin > 0 && margin < type(uint64).max, "!margin");
 		require(size > 0 && size < type(uint64).max, "!size");
@@ -192,13 +187,7 @@ contract Trading {
 
 		Product memory product = products[productId];
 		uint256 fee = size * product.fee / 10**6;
-
-		if (currency == address(0)) {
-			require(margin > fee, "!margin<fee");
-			margin -= fee;
-		} else {
-			_transferIn(currency, margin + fee);
-		}
+		_transferIn(currency, margin + fee);
 
 		require(margin >= minMargin[currency], "!min-margin");
 
@@ -258,12 +247,7 @@ contract Trading {
 		Product memory product = products[productId];
 		uint256 fee = size * product.fee / 10**6;
 
-		if (currency == address(0)) {
-			uint256 fee_units = fee * 10**(18-UNIT_DECIMALS);
-			require(msg.value >= fee_units && msg.value <= fee_units * (10**6 + 1)/10**6, "!fee");
-		} else {
-			_transferIn(currency, fee);
-		}
+		_transferIn(currency, fee);
 
 		uint256 margin = size * uint256(position.margin) / uint256(position.size);
 
@@ -347,14 +331,17 @@ contract Trading {
             pnlForTreasury = positivePnl * 25 / 100 + funding * 25 / 100;
 						_transferOut(currency, pool, pnlForPool);
 						_transferOut(currency, treasury, pnlForTreasury);
-						ITreasury(treasury).notifyApxReward(currency, pnlForTreasury);
 						if (positivePnl < margin) {
-							_transferOut(currency, user, margin - positivePnl);
+							_transferOut(currency, user, margin - positivePnl-funding);
 						}
 					}
 				} else {
+					pnlForPool = funding * 75 / 100;
+					pnlForTreasury = funding * 25 / 100;
+					_transferOut(currency, pool, pnlForPool);
+					_transferOut(currency, treasury, pnlForTreasury);
 					IPool(pool).creditUserProfit(user, uint256(pnl) * 10**(18-UNIT_DECIMALS));
-					_transferOut(currency, user, margin);
+					_transferOut(currency, user, margin-funding);
 				}
 
 				_updateOpenInterest(currency, size, true);
@@ -489,7 +476,6 @@ contract Trading {
 
 			_transferOut(currency, pool, thresholdForPool);
 			_transferOut(currency, treasury, thresholdForTreasury);
-			ITreasury(treasury).notifyApxReward(currency, thresholdForTreasury);
 			_updateOpenInterest(currency, position.size, true);
 			pendingFees[currency] += fee;
 
@@ -562,8 +548,8 @@ contract Trading {
 	// Internal methods
 
 	function _getPositionKey(address user, bytes32 productId, address currency, bool isLong) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked(user, productId, currency, isLong));
-    }
+		return keccak256(abi.encodePacked(user, productId, currency, isLong));
+	}
 
 	function _updateOpenInterest(address currency, uint256 amount, bool isDecrease) internal {
 		address pool = IRouter(router).getPool(currency);
@@ -583,11 +569,8 @@ contract Trading {
 		// adjust decimals
 		uint256 decimals = IRouter(router).getDecimals(currency);
 		amount = amount * (10**decimals) / (10**UNIT_DECIMALS);
-		if (currency == address(0)) {
-			payable(to).sendValue(amount);
-		} else {
-			IERC20(currency).safeTransfer(to, amount);
-		}
+
+		IERC20(currency).safeTransfer(to, amount);
 	}
 
 	function _validatePrice(

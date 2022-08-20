@@ -100,38 +100,33 @@ contract Pool {
 
 		uint256 lastBalance = _getCurrentBalance();
 
-		if (currency == address(0)) {
-			amount = msg.value;
-			lastBalance -= amount;
-		} else {
-			_transferIn(amount);
-		}
+		_transferIn(amount);
 
 		require(amount > 0, "!amount");
 		require(amount + lastBalance <= maxApx, "!max-apx");
 
-        uint256 clpAmountToMint = lastBalance == 0 || totalSupply == 0 ? amount : amount * totalSupply / lastBalance;
+		uint256 clpAmountToMint = lastBalance == 0 || totalSupply == 0 ? amount : amount * totalSupply / lastBalance;
 
-        lastDeposited[msg.sender] = block.timestamp;
+		lastDeposited[msg.sender] = block.timestamp;
 
-        IRewards(rewards).updateRewards(msg.sender);
+		IRewards(rewards).updateRewards(msg.sender);
 
-        totalSupply += clpAmountToMint;
-        balances[msg.sender] += clpAmountToMint;
+		totalSupply += clpAmountToMint;
+		balances[msg.sender] += clpAmountToMint;
 
-        emit Deposit(
-        	msg.sender,
-        	currency,
-        	amount,
-        	clpAmountToMint
-        );
+		emit Deposit(
+			msg.sender,
+			currency,
+			amount,
+			clpAmountToMint
+		);
 
 	}
 
 	function withdraw(uint256 currencyAmount) external {
 
 		require(currencyAmount > 0, "!amount");
-		require(block.timestamp > lastDeposited[msg.sender] + minDepositTime, "!cooldown");
+		// require(block.timestamp > lastDeposited[msg.sender] + minDepositTime, "!cooldown");
 
 		IRewards(rewards).updateRewards(msg.sender);
 
@@ -203,11 +198,8 @@ contract Pool {
 		// adjust decimals
 		uint256 decimals = IRouter(router).getDecimals(currency);
 		amount = amount * (10**decimals) / UNIT;
-		if (currency == address(0)) {
-			payable(to).sendValue(amount);
-		} else {
-			IERC20(currency).safeTransfer(to, amount);
-		}
+		
+		IERC20(currency).safeTransfer(to, amount);
 	}
 
 	function _getCurrentBalance() internal view returns(uint256) {

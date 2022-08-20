@@ -7,29 +7,44 @@ import "./libraries/Address.sol";
 import "./interfaces/IRouter.sol";
 import "./interfaces/ITrading.sol";
 import "./interfaces/IPool.sol";
+import "./interfaces/IPoolApx.sol";
 
 contract Rewards {
 
 	using SafeERC20 for IERC20; 
-    using Address for address payable;
+	using Address for address payable;
 
-    address public owner;
+	address public owner;
 	address public router;
 	address public trading;
 	address public treasury;
+	address public apx;
 
 	address public pool; // pool contract associated with these rewards
 	address public currency; // rewards paid in this
 
 	uint256 public cumulativeRewardPerTokenStored;
+	uint256 public cumulativeRewardPerApxStored;
 	uint256 public pendingReward;
-
+	uint256 public pendingRewardApx;
+	
 	mapping(address => uint256) private claimableReward;
 	mapping(address => uint256) private previousRewardPerToken;
+
+	mapping(address => uint256) public despoitAmount;
+	mapping(address => uint256) public pendingRewardForApx;
+	mapping(address => uint256) public latestCum;
 
 	uint256 public constant UNIT = 10**18;
 
 	event CollectedReward(
+		address user,
+		address poolContract,
+		address currency,
+		uint256 amount
+	);
+
+	event CollectedApxReward(
 		address user,
 		address poolContract,
 		address currency,
@@ -42,7 +57,17 @@ contract Rewards {
 		uint256 previousRewardPerToken
 	);
 
+	event UpdateRewardsApx(
+		address user,
+		uint256 oldBalance,
+		uint256 latestCum
+	);
+
 	event notifyReward(
+		uint256 amount
+	);
+
+	event notifyRewardApx(
 		uint256 amount
 	);
 
@@ -62,6 +87,10 @@ contract Rewards {
 		router = _router;
 		trading = IRouter(router).trading();
 		treasury = IRouter(router).treasury();
+	}
+
+	function setApx(address _apx) external onlyOwner {
+		apx = _apx;
 	}
 
 	// Methods
@@ -100,6 +129,23 @@ contract Rewards {
 
 	}
 
+	function notifyRewardReceivedApx(uint256 amount) external onlyTreasuryOrPool {
+		pendingRewardApx += amount;
+		
+		emit notifyRewardApx(amount);
+	}
+
+	function updateRewardsApx(address account, uint256 oldBalance) public onlyTreasuryOrPool {
+		pendingRewardForApx[account] += (cumulativeRewardPerApxStored - latestCum[account]) * oldBalance / UNIT;
+		latestCum[account] = cumulativeRewardPerApxStored;
+
+		emit UpdateRewardsApx(
+			account,
+			oldBalance,
+			latestCum[account]
+		);
+	}
+
 	function collectReward() external {
 
 		updateRewards(msg.sender);
@@ -117,8 +163,31 @@ contract Rewards {
 				currency, 
 				rewardToSend
 			);
-
 		}
+	}
+
+	function adminAirdrop(uint256 amount) external onlyTreasuryOrPool {
+		uint256 supply = IPool(pool).totalSupply();
+		cumulativeRewardPerApxStored = amount * UNIT / supply;
+	}
+
+	function getWithdrawAmount(address _address) public view returns(uint256 withdrawAmount) {
+		uint256 balances = IPool(pool).getBalance(_address);
+		withdrawAmount = (cumulativeRewardPerApxStored - latestCum[_address]) * balances / UNIT + pendingRewardForApx[_address];
+	}
+
+	function collectRewardApx() external {
+		uint256 withdrawAmount = getWithdrawAmount(msg.sender);
+		_transferOut(msg.sender, withdrawAmount);
+		pendingRewardForApx[msg.sender] = 0;
+		latestCum[msg.sender] = cumulativeRewardPerApxStored;
+
+		emit CollectedApxReward(
+			msg.sender, 
+			pool, 
+			currency, 
+			withdrawAmount
+		);
 
 	}
 
@@ -158,11 +227,7 @@ contract Rewards {
 		// adjust decimals
 		uint256 decimals = IRouter(router).getDecimals(currency);
 		amount = amount * (10**decimals) / UNIT;
-		if (currency == address(0)) {
-			payable(to).sendValue(amount);
-		} else {
-			IERC20(currency).safeTransfer(to, amount);
-		}
+		IERC20(currency).safeTransfer(to, amount);
 	}
 
 	modifier onlyOwner() {

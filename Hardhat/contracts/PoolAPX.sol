@@ -13,6 +13,8 @@ contract PoolAPX {
 
 	address public owner;
 	address public router;
+	address public ethReward;
+	address public usdcReward;
 
 	address public apx; // APX address
 
@@ -44,13 +46,21 @@ contract PoolAPX {
 		router = _router;
 	}
 
+	function setEthReward(address _ethReward) external onlyOwner {
+		ethReward = _ethReward;
+	}
+
+	function setUsdcReward(address _usdcReward) external onlyOwner {
+		usdcReward = _usdcReward;
+	}
+
 	function deposit(uint256 amount) external {
 
 		require(amount > 0, "!amount");
 
-		_updateRewards();
-
 		totalSupply += amount;
+		IRewards(ethReward).updateRewardsApx(msg.sender, balances[msg.sender]);
+		IRewards(usdcReward).updateRewardsApx(msg.sender, balances[msg.sender]);
 		balances[msg.sender] += amount;
 
 		IERC20(apx).safeTransferFrom(msg.sender, address(this), amount);
@@ -70,9 +80,9 @@ contract PoolAPX {
 			amount = balances[msg.sender];
 		}
 
-		_updateRewards();
-
 		totalSupply -= amount;
+		IRewards(ethReward).updateRewardsApx(msg.sender, balances[msg.sender]);
+		IRewards(usdcReward).updateRewardsApx(msg.sender, balances[msg.sender]);
 		balances[msg.sender] -= amount;
 
 		IERC20(apx).safeTransfer(msg.sender, amount);
@@ -86,15 +96,6 @@ contract PoolAPX {
 
 	function getBalance(address account) external view returns(uint256) {
 		return balances[account];
-	}
-
-	function _updateRewards() internal {
-		uint256 length = IRouter(router).currenciesLength();
-		for (uint256 i = 0; i < length; i++) {
-			address currency = IRouter(router).currencies(i);
-			address rewardsContract = IRouter(router).getApxRewards(currency);
-			IRewards(rewardsContract).updateRewards(msg.sender);
-		}
 	}
 
 	modifier onlyOwner() {

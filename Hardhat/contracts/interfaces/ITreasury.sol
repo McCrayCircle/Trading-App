@@ -6,6 +6,4 @@ interface ITreasury {
 
     function notifyFeeReceived(address currency, uint256 amount) external;
 
-    function notifyApxReward(address currency, uint256 amount) external;
-
 }
