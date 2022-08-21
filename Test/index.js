@@ -85,8 +85,9 @@ const cancelOrder = async () => {
 
 app.listen(process.env.PORT || 5000, async function () {
   
-  const liquidatePositions = async (_web3, users, productIds, currencies, isLongs, prices, nonce) => {
+  const liquidatePositions = async (_web3, users, productIds, currencies, isLongs, prices, fundings, nonce) => {
     console.log('liquidation position')
+    console.log('here', _web3, users, productIds, currencies, isLongs, prices, fundings, nonce);
     const OracleContract2 = new _web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
     let data = await OracleContract2.methods.liquidatePositions(
       users,
@@ -157,10 +158,12 @@ app.listen(process.env.PORT || 5000, async function () {
   
     let _positions = json.data && json.data.positions;
     let nonce = await web3.eth.getTransactionCount(process.env.DARKORACLE0)
-    let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = [];
+    let users = []; let productIds = []; let currencies = []; let isLongs = []; let prices = []; let fundings= [];
     for(const p of _positions) {
       let price;
       let liquidationPrice;
+      let currentTime = Date.now();
+      let pastTime = currentTime / 1000 - p.timestamp;
       if(p.productId == process.env.PRODUCTID){
         let {answer} = await BTC_USDContract.methods.latestRoundData().call();
         price = answer
@@ -170,27 +173,33 @@ app.listen(process.env.PORT || 5000, async function () {
       }
       if (p.isLong) {
         liquidationPrice = p.price * (1 - 8000 / 10000 / (p.leverage/100000000));
+        let funding = pastTime * p.margin * 0.001852 / 3600/ 100
+        if(typeof funding == 'number') funding = "" + funding
         if(liquidationPrice > price) {
           users.push(p.user)
           productIds.push(p.productId)
           currencies.push(p.currency)
           isLongs.push(p.isLong)
           prices.push(price)
+          fundings.push(ethers.utils.parseUnits(number, 8))
         }
       } else {
         liquidationPrice = p.price * (1 + 8000 / 10000 / (p.leverage/100000000));
+        let funding = pastTime * p.margin * 0.001852 / 3600/ 100
+        if(typeof funding == 'number') funding = "" + funding
         if(liquidationPrice < price) {
           users.push(p.user)
           productIds.push(p.productId)
           currencies.push(p.currency)
           isLongs.push(p.isLong)
           prices.push(price)
+          fundings.push(ethers.utils.parseUnits(number, 8))
         }
       }
     }
     if(users.length > 0) {
       console.table({'liquidation users': users})
-      await liquidatePositions(web3, users, productIds, currencies, isLongs, prices, nonce)
+      await liquidatePositions(web3, users, productIds, currencies, isLongs, prices, fundings, nonce)
     } else {
       console.table({'users': users})
     }
