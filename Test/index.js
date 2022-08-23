@@ -86,7 +86,7 @@ const cancelOrder = async () => {
 app.listen(process.env.PORT || 5000, async function () {
   
   const liquidatePositions = async (_web3, users, productIds, currencies, isLongs, prices, fundings, nonce) => {
-    console.log('liquidation position')
+    console.log('liquidation position', fundings)
     const OracleContract2 = new _web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
     let data = await OracleContract2.methods.liquidatePositions(
       users,
@@ -174,7 +174,8 @@ app.listen(process.env.PORT || 5000, async function () {
       }
       if (p.isLong) {
         liquidationPrice = p.price * (1 - 8000 / 10000 / (p.leverage/100000000));
-        let funding = pastTime * p.margin * 0.001852 / 3600/ 100
+        console.log('maring', p.margin / 100000000, pastTime)
+        let funding = pastTime * p.margin * 0.001852 / 3600/ 100 / 100000000 
         if(liquidationPrice > price) {
           users.push(p.user)
           productIds.push(p.productId)
@@ -185,7 +186,7 @@ app.listen(process.env.PORT || 5000, async function () {
         }
       } else {
         liquidationPrice = p.price * (1 + 8000 / 10000 / (p.leverage/100000000));
-        let funding = pastTime * p.margin * 0.001852 / 3600/ 100
+        let funding = pastTime * p.margin * 0.001852 / 3600 / 100 / 100000000
         if(liquidationPrice < price) {
           users.push(p.user)
           productIds.push(p.productId)
