@@ -201,7 +201,7 @@ app.listen(process.env.PORT || 5000, async function () {
     if(j == 4) j = 0;
   }
 
-  const settleOrders = async (_web3, users, productIds, currencies, isLongs, prices, nonce) => {
+  const settleOrders = async (_web3, users, productIds, currencies, isLongs, prices, fundings, nonce) => {
     console.log('settle order')
     const OracleContract = new _web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
     let data = await OracleContract.methods.settleOrders(
@@ -209,7 +209,8 @@ app.listen(process.env.PORT || 5000, async function () {
       productIds,
       currencies,
       isLongs,
-      prices
+      prices,
+      fundings
     )
 
     let tx = {
