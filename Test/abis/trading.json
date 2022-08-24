@@ -133,12 +133,6 @@
         "internalType": "uint256",
         "name": "threshold",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "funding",
-        "type": "uint256"
       }
     ],
     "name": "LiquidationError",
@@ -654,11 +648,6 @@
       {
         "internalType": "uint256",
         "name": "price",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "funding",
         "type": "uint256"
       }
     ],

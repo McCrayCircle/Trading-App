@@ -130,11 +130,6 @@
         "internalType": "uint256[]",
         "name": "prices",
         "type": "uint256[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "fundings",
-        "type": "uint256[]"
       }
     ],
     "name": "liquidatePositions",
