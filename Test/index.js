@@ -7,7 +7,7 @@ const fetch = require('node-fetch');
 require('dotenv').config()
 
 let _provider = new ethers.providers.JsonRpcProvider(process.env.MUMBAI_RPC);
-var web3 = new Web3(process.env.MUMBAI_RPC);
+var web3__ = new Web3(process.env.MUMBAI_RPC);
 var mainnetWeb3 = new Web3(process.env.MAINNET_RPC)
 const darkOracleSigner = new ethers.Wallet(process.env.DARKORACLE);
 const account = new ethers.Wallet(process.env.OWNER, _provider);
@@ -83,13 +83,13 @@ app.listen(process.env.PORT || 5000, async function () {
   }
 
   let j = 0;
-  let web3_array = [];
-  for (j = 0; j < 4; j ++) {
-    web3_array[j] = new Web3(rpcs[j]);
-  }
+  // let web3_array = [];
+  // for (j = 0; j < 4; j ++) {
+  //   web3_array[j] = new Web3(rpcs[j]);
+  // }
 
   const getPositions = async() => {
-    var web3 = web3_array[j];
+    var web3 = new Web3(rpcs[j]);
     const response = await fetch('https://api.thegraph.com/subgraphs/name/cooker0910/prototype', {
       method: 'POST',
       headers: {
@@ -219,10 +219,10 @@ app.listen(process.env.PORT || 5000, async function () {
   }
 
   setInterval(getPositions, 100 * 1000)
-  
+
   let i = 0;
   for(; ;) {
-    var web3 = web3_array[i];
+    var web3 = new Web3(rpcs[i]);
     confirmedBlockNumber = await getLatestBlockNumber();
     let latestBlockNumber = await web3.eth.getBlockNumber();
     console.log('block number', latestBlockNumber, confirmedBlockNumber)
