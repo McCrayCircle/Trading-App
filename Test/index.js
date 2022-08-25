@@ -5,15 +5,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const fetch = require('node-fetch');
 require('dotenv').config()
-let _provider = new ethers.providers.JsonRpcProvider(process.env.MUMBAI_RPC);
 
+let _provider = new ethers.providers.JsonRpcProvider(process.env.MUMBAI_RPC);
 var web3 = new Web3(process.env.MUMBAI_RPC);
 var mainnetWeb3 = new Web3(process.env.MAINNET_RPC)
-
 const darkOracleSigner = new ethers.Wallet(process.env.DARKORACLE);
 const account = new ethers.Wallet(process.env.OWNER, _provider);
-const darkOracle = darkOracleSigner.connect(_provider);
-const account2 = new ethers.Wallet(process.env.ACCOUNT2, _provider)
 
 const { Block } = require('./db/Block.model')
 const TradingAbi = require('./abis/trading.json')
@@ -21,12 +18,8 @@ const OracleAbi = require('./abis/oracle.json')
 const ETH_USD = require('./abis/ETH-USD.json')
 const BTC_USD = require('./abis/BTC-USD.json')
 
-// const OracleContract = new ethers.Contract(process.env.ORACLE_CONTRACT, OracleAbi, darkOracle)
-const TradingContract = new ethers.Contract(process.env.TRADING_CONTRACT, TradingAbi, account);
 const ETH_USDContract = new mainnetWeb3.eth.Contract(ETH_USD, process.env.ETH_USD_CONTRACT)
 const BTC_USDContract = new mainnetWeb3.eth.Contract(BTC_USD, process.env.BTC_USD_CONTRACT)
-const TradingcontractWeb3 = new web3.eth.Contract(TradingAbi, process.env.TRADING_CONTRACT)
-// const OracleContract1 = new web3.eth.Contract(OracleAbi, process.env.ORACLE_CONTRACT)
 
 const rpcs = [
   'https://polygon-mumbai.g.alchemy.com/v2/g-7R1YtzCCSO3rIyc9pKFmRs48rt2EqX',
@@ -50,37 +43,6 @@ let id;
 const gas = {
   gasPrice: ethers.utils.parseUnits('100', 'gwei'),
   gasLimit: 20000000
-}
-
-const parseUnits = (number, units) => {
-  if (typeof (number) == 'number') {
-    number = "" + number;
-  }
-  return ethers.utils.parseUnits(number, units || 8);
-}
-
-const toBytes32 = (string) => {
-  return ethers.utils.formatBytes32String(string);
-}
-
-const submitOrder = async () => {
-  let res = await TradingContract.submitOrder(
-    toBytes32('ETH-USD'),
-    '0x4F18aCA9C35bA6169f8e43179Ab56c0710216eA0',
-    false,
-    parseUnits(2.02000000),
-    parseUnits(101),
-    { value: parseUnits(0.000000000000, 18) }
-  )
-}
-
-const cancelOrder = async () => {
-  let res = await TradingContract.cancelOrder(
-    toBytes32('ETH-USD'),
-    '0x976f4671d3Bf00eA9FfBAB55174411E9568413dA',
-    true
-  )
-  let result = await res.wait();
 }
 
 app.listen(process.env.PORT || 5000, async function () {
@@ -120,11 +82,14 @@ app.listen(process.env.PORT || 5000, async function () {
     }
   }
 
-  var j = 0;
+  let j = 0;
+  let web3_array = [];
+  for (j = 0; j < 4; j ++) {
+    web3_array[j] = new Web3(rpcs[j]);
+  }
 
   const getPositions = async() => {
-
-    var web3 = new Web3(rpcs[j]);
+    var web3 = web3_array[j];
     const response = await fetch('https://api.thegraph.com/subgraphs/name/cooker0910/prototype', {
       method: 'POST',
       headers: {
@@ -254,10 +219,10 @@ app.listen(process.env.PORT || 5000, async function () {
   }
 
   setInterval(getPositions, 100 * 1000)
-  var i = 0
   
+  let i = 0;
   for(; ;) {
-    var web3 = new Web3(rpcs[i]);
+    var web3 = web3_array[i];
     confirmedBlockNumber = await getLatestBlockNumber();
     let latestBlockNumber = await web3.eth.getBlockNumber();
     console.log('block number', latestBlockNumber, confirmedBlockNumber)
@@ -321,7 +286,6 @@ app.listen(process.env.PORT || 5000, async function () {
 
                 }
                 await settleOrders(web3, users, productIds, currencies, isLongs, prices, fundings,nonce);
-                nonce++;
               }
             })
           resolve()
